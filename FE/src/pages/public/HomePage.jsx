@@ -1,11 +1,20 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { Shirt, PackageCheck, CalendarDays, ShieldCheck } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import Header from "../../components/common/Header";
+import { getPublishedBlogsApi } from "../../services/blog.service";
 import { API_BASE_URL } from "../../config/env";
 import "../../style/pages/HomePage.css";
 import logo from "../../assets/logo/logo.png";
 import banner1 from "../../assets/banner/banner 1.png";
+import banner2 from "../../assets/banner/banner2 (1).png";
 import banner3 from "../../assets/banner/banner3.png";
 import { CONTACT_LINKS, UI_IMAGE_FALLBACKS } from "../../constants/ui";
 import { normalizeImageUrl } from "../../utils/imageUrl";
@@ -31,7 +40,8 @@ const I18N = {
 
     "hero.badge": "Đồ thể thao",
     "hero.h1_1": "Thuê đồ thể thao – mặc đẹp trong 5 phút",
-    "hero.sub_1": "Có sẵn phụ kiện thể thao • Hỗ trợ tư vấn size • Đặt lịch online",
+    "hero.sub_1":
+      "Có sẵn phụ kiện thể thao • Hỗ trợ tư vấn size • Đặt lịch online",
     "hero.h1_2": "Combo gia đình – đủ size, đủ phụ kiện thể thao",
     "hero.sub_2":
       "Tư vấn dụng cụ theo nhóm • Vận động thoải mái • Phù hợp mọi lứa tuổi",
@@ -51,20 +61,17 @@ const I18N = {
     "policy.title": "Nguyên tắc thuê & mua tại FITFLOW",
     "policy.sub": "Minh bạch – rõ ràng – thân thiện với du khách",
     "policy.c1.t": "Đặt cọc 50% để giữ đồ",
-    "policy.c1.d":
-      "Đặt online để giữ lịch & set sản phẩm theo yêu cầu.",
+    "policy.c1.d": "Đặt online để giữ lịch & set sản phẩm theo yêu cầu.",
     "policy.c2.t": "Nhận đồ thanh toán phần còn lại",
     "policy.c2.d": "Thanh toán 50% còn lại khi pick-up.",
     "policy.c3.t": "Thế chân linh hoạt",
-    "policy.c3.d":
-      "CCCD/GPLX/Cavet hoặc tiền thế chân theo quy định.",
+    "policy.c3.d": "CCCD/GPLX/Cavet hoặc tiền thế chân theo quy định.",
     "policy.c4.t": "Trễ hạn có phụ thu",
     "policy.c4.d": "Trễ ≥ 3 ngày tính phí theo quy định.",
     "policy.c5.t": "Hư/mất cần bồi thường",
     "policy.c5.d": "Theo mức độ & giá trị sản phẩm.",
     "policy.c6.t": "Hỗ trợ đổi size",
-    "policy.c6.d":
-      "Đổi theo kho còn, ưu tiên khách đặt lịch.",
+    "policy.c6.d": "Đổi theo kho còn, ưu tiên khách đặt lịch.",
 
     "cat.title": "Danh mục nổi bật",
     "cat.sub":
@@ -123,30 +130,21 @@ const I18N = {
     "packages.c3.b3": "Tối ưu chi phí cho đội nhóm",
 
     "reviews.title": "Khách hàng nói gì về FITFLOW",
-    "reviews.sub":
-      "Phản hồi tiêu biểu từ những người yêu thể thao.",
+    "reviews.sub": "Phản hồi tiêu biểu từ những người yêu thể thao.",
     "reviews.r1":
       "“Đến là có đủ dụng cụ, tư vấn size chuẩn xác. Đồ rất mới và chất lượng!”",
     "reviews.r2":
       "“Nhân viên nhiệt tình, hỗ trợ chọn vợt phù hợp với lối đánh.”",
-    "reviews.r3":
-      "“Gói nhóm rất tiện, tiết kiệm chi phí cho cả team.”",
+    "reviews.r3": "“Gói nhóm rất tiện, tiết kiệm chi phí cho cả team.”",
 
     "blog.title": "Blog & Cẩm nang thể thao",
-    "blog.sub":
-      "Mẹo chọn dụng cụ thể thao, bảng size và tin tức giải đấu.",
+    "blog.sub": "Mẹo chọn dụng cụ thể thao, bảng size và tin tức giải đấu.",
     "blog.p1.t": "Bí quyết chọn vợt Pickleball cho người mới",
-    "blog.p1.d":
-      "Các tiêu chí trọng lượng, mặt vợt phù hợp với lối đánh.",
-    "blog.p2.t":
-      "Bảng size chuẩn – chọn đồ thể thao không lo lệch",
-    "blog.p2.d":
-      "Hướng dẫn đo cơ bản để đặt mua trang phục chuẩn form.",
-    "blog.p3.t":
-      "Luật thi đấu Pickleball & Tennis cơ bản cần biết",
-    "blog.p3.d":
-      "Những quy tắc nền tảng để bạn tự tin lên sân.",
-
+    "blog.p1.d": "Các tiêu chí trọng lượng, mặt vợt phù hợp với lối đánh.",
+    "blog.p2.t": "Bảng size chuẩn – chọn đồ thể thao không lo lệch",
+    "blog.p2.d": "Hướng dẫn đo cơ bản để đặt mua trang phục chuẩn form.",
+    "blog.p3.t": "Luật thi đấu Pickleball & Tennis cơ bản cần biết",
+    "blog.p3.d": "Những quy tắc nền tảng để bạn tự tin lên sân.",
 
     "contact.title": "Liên hệ",
     "contact.sub":
@@ -160,14 +158,10 @@ const I18N = {
     "footer.addr": "Thanh Xuân, Hà Nội",
     "footer.phone": "Hotline:",
   },
-
-
 };
 
 function t(lang, key) {
-  return I18N[lang] && I18N[lang][key]
-    ? I18N[lang][key]
-    : key;
+  return I18N[lang] && I18N[lang][key] ? I18N[lang][key] : key;
 }
 
 const year = new Date().getFullYear();
@@ -185,13 +179,18 @@ const CONTACT_INFO = {
   instagramHref: CONTACT_LINKS.instagramHref,
 };
 
-const toApiUrl = (path) => `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+const toApiUrl = (path) =>
+  `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
 const parseJsonSafe = async (response) => {
-  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+  const contentType = String(
+    response.headers.get("content-type") || "",
+  ).toLowerCase();
   if (!contentType.includes("application/json")) {
     const bodyText = await response.text();
-    throw new Error(`Expected JSON but received ${contentType || "unknown"}: ${bodyText.slice(0, 80)}`);
+    throw new Error(
+      `Expected JSON but received ${contentType || "unknown"}: ${bodyText.slice(0, 80)}`,
+    );
   }
   return response.json();
 };
@@ -199,11 +198,9 @@ const parseJsonSafe = async (response) => {
 const Homepage = ({ initialSection = "" }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isAuthenticated = false;
-  const user = null;
-  const logout = async () => {};
+  const { isAuthenticated, user, logout } = useAuth();
   const lang = "vi";
-  const setLang = () => { };
+  const setLang = () => {};
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isSliderPaused, setIsSliderPaused] = useState(false);
   const [activeSection, setActiveSection] = useState(initialSection || "home");
@@ -249,7 +246,7 @@ const Homepage = ({ initialSection = "" }) => {
         targetLink: "#buy",
       },
     ],
-    [lang]
+    [lang],
   );
 
   const stopAutoSlide = useCallback(() => {
@@ -292,7 +289,7 @@ const Homepage = ({ initialSection = "" }) => {
       const normalized = (index + heroBanners.length) % heroBanners.length;
       setCurrentSlide(normalized);
     },
-    [heroBanners.length]
+    [heroBanners.length],
   );
 
   const restartAutoSlide = useCallback(() => {
@@ -309,9 +306,7 @@ const Homepage = ({ initialSection = "" }) => {
       }
 
       document.title = t(lang, "meta.title");
-      const desc = document.querySelector(
-        'meta[name="description"]'
-      );
+      const desc = document.querySelector('meta[name="description"]');
       if (desc) {
         desc.setAttribute("content", t(lang, "meta.desc"));
       }
@@ -373,7 +368,9 @@ const Homepage = ({ initialSection = "" }) => {
 
     categorySlideIntervalRef.current = setInterval(() => {
       setCategorySlideIndex((prev) =>
-        featuredCategories.length === 0 ? 0 : (prev + 1) % featuredCategories.length
+        featuredCategories.length === 0
+          ? 0
+          : (prev + 1) % featuredCategories.length,
       );
     }, CATEGORY_SLIDE_MS);
 
@@ -412,7 +409,7 @@ const Homepage = ({ initialSection = "" }) => {
           setCategoriesError(
             lang === "vi"
               ? "Không tải được danh mục từ API, đang dùng dữ liệu dự phòng."
-              : "Failed to load categories from API, using fallback data."
+              : "Failed to load categories from API, using fallback data.",
           );
         }
       } finally {
@@ -435,10 +432,8 @@ const Homepage = ({ initialSection = "" }) => {
       try {
         setBlogsLoading(true);
         setBlogsError("");
-        const response = await fetch(toApiUrl("/blogs?page=1&limit=3"));
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await parseJsonSafe(response);
-        const apiBlogs = Array.isArray(payload?.data) ? payload.data : [];
+        const response = await getPublishedBlogsApi({ page: 1, limit: 3 });
+        const apiBlogs = Array.isArray(response?.data) ? response.data : [];
         if (isMounted) {
           setBlogs(apiBlogs.slice(0, 3));
         }
@@ -448,7 +443,7 @@ const Homepage = ({ initialSection = "" }) => {
           setBlogsError(
             lang === "vi"
               ? "Không tải được bài viết từ hệ thống."
-              : "Failed to load blog posts from server."
+              : "Failed to load blog posts from server.",
           );
         }
       } finally {
@@ -479,7 +474,9 @@ const Homepage = ({ initialSection = "" }) => {
 
         if (buyRes.ok) {
           const buyPayload = await parseJsonSafe(buyRes);
-          const buyData = Array.isArray(buyPayload?.data) ? buyPayload.data : [];
+          const buyData = Array.isArray(buyPayload?.data)
+            ? buyPayload.data
+            : [];
           if (isMounted) {
             setBuyProducts(buyData);
           }
@@ -487,7 +484,9 @@ const Homepage = ({ initialSection = "" }) => {
 
         if (fittingRes.ok) {
           const fittingPayload = await parseJsonSafe(fittingRes);
-          const fittingData = Array.isArray(fittingPayload?.data) ? fittingPayload.data : [];
+          const fittingData = Array.isArray(fittingPayload?.data)
+            ? fittingPayload.data
+            : [];
           if (isMounted) {
             setFittingProducts(fittingData);
           }
@@ -556,7 +555,14 @@ const Homepage = ({ initialSection = "" }) => {
       return;
     }
 
-    const sectionIds = ["rent", "buy", "fitting", "packages", "blog", "contact"];
+    const sectionIds = [
+      "rent",
+      "buy",
+      "fitting",
+      "packages",
+      "blog",
+      "contact",
+    ];
 
     const handleScroll = () => {
       const offset = 130; // gần bằng chiều cao header + nav
@@ -609,9 +615,14 @@ const Homepage = ({ initialSection = "" }) => {
     return "Other";
   };
 
-  const navigateToBuyCategory = (categoryValue, categoryType = "sale_or_rent") => {
+  const navigateToBuyCategory = (
+    categoryValue,
+    categoryType = "sale_or_rent",
+  ) => {
     const value = String(categoryValue || "").trim();
-    const normalizedType = String(categoryType || "").trim().toLowerCase();
+    const normalizedType = String(categoryType || "")
+      .trim()
+      .toLowerCase();
     const purpose =
       normalizedType === "rent" || normalizedType === "service"
         ? "rent"
@@ -666,10 +677,10 @@ const Homepage = ({ initialSection = "" }) => {
   const getLikeCount = (item) => {
     const directValue = Number(
       item?.likeCount ??
-      item?.likes ??
-      item?.favoriteCount ??
-      item?.wishlistCount ??
-      item?.totalLikes
+        item?.likes ??
+        item?.favoriteCount ??
+        item?.wishlistCount ??
+        item?.totalLikes,
     );
     if (Number.isFinite(directValue) && directValue >= 0) {
       return directValue;
@@ -689,25 +700,30 @@ const Homepage = ({ initialSection = "" }) => {
   const displayedRentProducts =
     (topRentProducts.length > 0 ? topRentProducts : buyProducts).length > 0
       ? [...(topRentProducts.length > 0 ? topRentProducts : buyProducts)]
-        .map((item) => ({
-          ...item,
-          __likeCount: getLikeCount(item),
-        }))
-        .filter((item) => hasRealImage(item.imageUrl))
-        .filter((item) => Number(item.baseRentPrice || 0) > 0)
-        .filter((item) => !['Apparel', 'Accessories'].includes(String(item.category || '').trim()))
-        .filter((item) => item.__likeCount > 0)
-        .sort((a, b) => b.__likeCount - a.__likeCount)
-        .slice(0, HOMEPAGE_PRODUCT_LIMIT)
-        .map((item) => ({
-          id: item._id,
-          name: item.name,
-          meta:
-            lang === "vi"
-              ? `${item.category} • ${item.__likeCount} lượt yêu thích • ${formatCurrency(item.baseRentPrice)}/ngày`
-              : `${item.category} • ${item.__likeCount} likes • ${formatCurrency(item.baseRentPrice)}/day`,
-          imageUrl: item.imageUrl,
-        }))
+          .map((item) => ({
+            ...item,
+            __likeCount: getLikeCount(item),
+          }))
+          .filter((item) => hasRealImage(item.imageUrl))
+          .filter((item) => Number(item.baseRentPrice || 0) > 0)
+          .filter(
+            (item) =>
+              !["Apparel", "Accessories"].includes(
+                String(item.category || "").trim(),
+              ),
+          )
+          .filter((item) => item.__likeCount > 0)
+          .sort((a, b) => b.__likeCount - a.__likeCount)
+          .slice(0, HOMEPAGE_PRODUCT_LIMIT)
+          .map((item) => ({
+            id: item._id,
+            name: item.name,
+            meta:
+              lang === "vi"
+                ? `${item.category} • ${item.__likeCount} lượt yêu thích • ${formatCurrency(item.baseRentPrice)}/ngày`
+                : `${item.category} • ${item.__likeCount} likes • ${formatCurrency(item.baseRentPrice)}/day`,
+            imageUrl: item.imageUrl,
+          }))
       : [];
 
   const canViewProductDetail = (productId) => Boolean(productId);
@@ -725,58 +741,83 @@ const Homepage = ({ initialSection = "" }) => {
   const rentableWithImage = buyProducts
     .filter((item) => hasRealImage(item.imageUrl))
     .filter((item) => Number(item.baseRentPrice || 0) > 0)
-    .filter((item) => !['Apparel', 'Accessories'].includes(String(item.category || '').trim()));
-  const traditionalCandidates = rentableWithImage.filter((item) => isTraditionalCostume(item));
-  const displayedBuyProducts = (traditionalCandidates.length > 0 ? traditionalCandidates : rentableWithImage)
+    .filter(
+      (item) =>
+        !["Apparel", "Accessories"].includes(
+          String(item.category || "").trim(),
+        ),
+    );
+  const traditionalCandidates = rentableWithImage.filter((item) =>
+    isTraditionalCostume(item),
+  );
+  const displayedBuyProducts = (
+    traditionalCandidates.length > 0 ? traditionalCandidates : rentableWithImage
+  )
     .slice(0, HOMEPAGE_PRODUCT_LIMIT)
     .map(mapProductCard);
 
   const fittingWithImage = fittingProducts
     .filter((item) => hasRealImage(item.imageUrl))
     .filter((item) => Number(item.baseRentPrice || 0) > 0);
-  const dressCandidates = fittingWithImage.filter((item) => isDressRental(item));
-  const dressFallback = fittingWithImage.filter(
-    (item) => !displayedBuyProducts.some((chosen) => chosen.id === item._id)
+  const dressCandidates = fittingWithImage.filter((item) =>
+    isDressRental(item),
   );
-  const displayedFittingProducts = (dressCandidates.length > 0 ? dressCandidates : dressFallback)
+  const dressFallback = fittingWithImage.filter(
+    (item) => !displayedBuyProducts.some((chosen) => chosen.id === item._id),
+  );
+  const displayedFittingProducts = (
+    dressCandidates.length > 0 ? dressCandidates : dressFallback
+  )
     .slice(0, HOMEPAGE_PRODUCT_LIMIT)
     .map(mapProductCard);
 
   const fallbackBlogPosts = [
-    { id: "blog-fallback-1", title: t(lang, "blog.p1.t"), excerpt: t(lang, "blog.p1.d"), thumbnail: "" },
-    { id: "blog-fallback-2", title: t(lang, "blog.p2.t"), excerpt: t(lang, "blog.p2.d"), thumbnail: "" },
-    { id: "blog-fallback-3", title: t(lang, "blog.p3.t"), excerpt: t(lang, "blog.p3.d"), thumbnail: "" },
+    {
+      id: "blog-fallback-1",
+      title: t(lang, "blog.p1.t"),
+      excerpt: t(lang, "blog.p1.d"),
+      thumbnail: "",
+    },
+    {
+      id: "blog-fallback-2",
+      title: t(lang, "blog.p2.t"),
+      excerpt: t(lang, "blog.p2.d"),
+      thumbnail: "",
+    },
+    {
+      id: "blog-fallback-3",
+      title: t(lang, "blog.p3.t"),
+      excerpt: t(lang, "blog.p3.d"),
+      thumbnail: "",
+    },
   ];
 
   const displayedBlogs =
     blogs.length > 0
       ? blogs.slice(0, 3).map((item, index) => {
-        const rawContent = String(item?.content || "").trim();
-        const lines = rawContent
-          .split(/\r?\n/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        const title =
-          String(item?.title || "").trim() ||
-          lines[0] ||
-          (lang === "vi"
-            ? `Bài viết ${index + 1}`
-            : `Post ${index + 1}`);
-        const body = lines.slice(1).join(" ") || rawContent;
-        const excerpt =
-          body.length > 180 ? `${body.slice(0, 177)}...` : body;
+          const rawContent = String(item?.content || "").trim();
+          const lines = rawContent
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+          const title =
+            String(item?.title || "").trim() ||
+            lines[0] ||
+            (lang === "vi" ? `Bài viết ${index + 1}` : `Post ${index + 1}`);
+          const body = lines.slice(1).join(" ") || rawContent;
+          const excerpt = body.length > 180 ? `${body.slice(0, 177)}...` : body;
 
-        return {
-          id: item?._id || `blog-${index + 1}`,
-          title,
-          thumbnail: normalizeImageUrl(String(item?.thumbnail || "").trim()),
-          excerpt:
-            excerpt ||
-            (lang === "vi"
-              ? "Nội dung đang được cập nhật."
-              : "Content is being updated."),
-        };
-      })
+          return {
+            id: item?._id || `blog-${index + 1}`,
+            title,
+            thumbnail: normalizeImageUrl(String(item?.thumbnail || "").trim()),
+            excerpt:
+              excerpt ||
+              (lang === "vi"
+                ? "Nội dung đang được cập nhật."
+                : "Content is being updated."),
+          };
+        })
       : fallbackBlogPosts;
 
   const displayedCategories = useMemo(() => {
@@ -817,20 +858,14 @@ const Homepage = ({ initialSection = "" }) => {
               <div className="header-right">
                 <div className="lang" aria-label="Language switcher">
                   <button
-                    className={
-                      "lang-btn" +
-                      (lang === "vi" ? " active" : "")
-                    }
+                    className={"lang-btn" + (lang === "vi" ? " active" : "")}
                     type="button"
                     onClick={() => setLang("vi")}
                   >
                     VI
                   </button>
                   <button
-                    className={
-                      "lang-btn" +
-                      (lang === "en" ? " active" : "")
-                    }
+                    className={"lang-btn" + (lang === "en" ? " active" : "")}
                     type="button"
                     onClick={() => setLang("en")}
                   >
@@ -852,10 +887,18 @@ const Homepage = ({ initialSection = "" }) => {
                       className="iconbtn account-avatar-btn"
                       type="button"
                       onClick={() => setAccountMenuOpen((prev) => !prev)}
-                      aria-label={lang === "vi" ? "Mở menu tài khoản" : "Open account menu"}
+                      aria-label={
+                        lang === "vi"
+                          ? "Mở menu tài khoản"
+                          : "Open account menu"
+                      }
                     >
                       {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Avatar" className="account-avatar-img" />
+                        <img
+                          src={user.avatarUrl}
+                          alt="Avatar"
+                          className="account-avatar-img"
+                        />
                       ) : (
                         <span className="account-avatar-fallback">👤</span>
                       )}
@@ -904,8 +947,7 @@ const Homepage = ({ initialSection = "" }) => {
                 <div className="nav-left">
                   <a
                     className={
-                      "nav-item" +
-                      (activeSection === "rent" ? " active" : "")
+                      "nav-item" + (activeSection === "rent" ? " active" : "")
                     }
                     href="#rent"
                     onClick={(e) => {
@@ -918,8 +960,7 @@ const Homepage = ({ initialSection = "" }) => {
                   </a>
                   <Link
                     className={
-                      "nav-item" +
-                      (activeSection === "buy" ? " active" : "")
+                      "nav-item" + (activeSection === "buy" ? " active" : "")
                     }
                     to="/buy"
                     onClick={() => {
@@ -942,8 +983,7 @@ const Homepage = ({ initialSection = "" }) => {
                   </Link>
                   <a
                     className={
-                      "nav-item" +
-                      (activeSection === "blog" ? " active" : "")
+                      "nav-item" + (activeSection === "blog" ? " active" : "")
                     }
                     href="#blog"
                     onClick={(e) => {
@@ -974,10 +1014,7 @@ const Homepage = ({ initialSection = "" }) => {
                   <input
                     className="search"
                     type="search"
-                    placeholder={t(
-                      lang,
-                      "search.placeholder"
-                    )}
+                    placeholder={t(lang, "search.placeholder")}
                   />
                   <button
                     className="cta"
@@ -1023,9 +1060,7 @@ const Homepage = ({ initialSection = "" }) => {
               return (
                 <div
                   key={b._id || idx}
-                  className={
-                    "slide" + (currentSlide === idx ? " active" : "")
-                  }
+                  className={"slide" + (currentSlide === idx ? " active" : "")}
                 >
                   {bg && (
                     <div
@@ -1092,9 +1127,17 @@ const Homepage = ({ initialSection = "" }) => {
                       </div>
 
                       <div className="hero-kpis">
-                        <span>{lang === "vi" ? "4.9/5 đánh giá" : "4.9/5 reviews"}</span>
-                        <span>{lang === "vi" ? "2000+ lượt thuê" : "2000+ rentals"}</span>
-                        <span>{lang === "vi" ? "Hỗ trợ 7 ngày/tuần" : "Support 7 days/week"}</span>
+                        <span>
+                          {lang === "vi" ? "4.9/5 đánh giá" : "4.9/5 reviews"}
+                        </span>
+                        <span>
+                          {lang === "vi" ? "2000+ lượt thuê" : "2000+ rentals"}
+                        </span>
+                        <span>
+                          {lang === "vi"
+                            ? "Hỗ trợ 7 ngày/tuần"
+                            : "Support 7 days/week"}
+                        </span>
                       </div>
                     </div>
 
@@ -1134,8 +1177,7 @@ const Homepage = ({ initialSection = "" }) => {
               <div
                 className="slide-backdrop"
                 style={{
-                  backgroundImage:
-                    `url('${UI_IMAGE_FALLBACKS.heroBanner}')`,
+                  backgroundImage: `url('${UI_IMAGE_FALLBACKS.heroBanner}')`,
                 }}
               />
               <div className="hero-media-frame">
@@ -1200,9 +1242,7 @@ const Homepage = ({ initialSection = "" }) => {
               {heroBanners.map((_, i) => (
                 <button
                   key={i}
-                  className={
-                    "dotbtn" + (currentSlide === i ? " active" : "")
-                  }
+                  className={"dotbtn" + (currentSlide === i ? " active" : "")}
                   type="button"
                   aria-label={`Slide ${i + 1}`}
                   onClick={() => {
@@ -1235,7 +1275,7 @@ const Homepage = ({ initialSection = "" }) => {
       </section>
 
       {/* ══ STATS STRIP (FitFlow style) ══ */}
-      <section aria-label="Thống kê FITFLOW" style={{ padding: '22px 0 0' }}>
+      <section aria-label="Thống kê FITFLOW" style={{ padding: "22px 0 0" }}>
         <div className="container">
           <div className="stats-strip">
             <div>
@@ -1257,12 +1297,8 @@ const Homepage = ({ initialSection = "" }) => {
       {/* POLICIES / PRINCIPLES */}
       <section className="soft" id="policy">
         <div className="container">
-          <h2 className="section-title">
-            {t(lang, "policy.title")}
-          </h2>
-          <p className="section-sub">
-            {t(lang, "policy.sub")}
-          </p>
+          <h2 className="section-title">{t(lang, "policy.title")}</h2>
+          <p className="section-sub">{t(lang, "policy.sub")}</p>
 
           <div className="grid-6">
             <div className="card">
@@ -1302,12 +1338,8 @@ const Homepage = ({ initialSection = "" }) => {
       {/* FEATURED CATEGORIES */}
       <section id="categories">
         <div className="container">
-          <h2 className="section-title">
-            {t(lang, "cat.title")}
-          </h2>
-          <p className="section-sub">
-            {t(lang, "cat.sub")}
-          </p>
+          <h2 className="section-title">{t(lang, "cat.title")}</h2>
+          <p className="section-sub">{t(lang, "cat.sub")}</p>
 
           {categoriesLoading && (
             <p className="category-status">
@@ -1330,7 +1362,7 @@ const Homepage = ({ initialSection = "" }) => {
                 onClick={() =>
                   navigateToBuyCategory(
                     category.value || category.displayName,
-                    category.type
+                    category.type,
                   )
                 }
                 onKeyDown={(event) => {
@@ -1338,7 +1370,7 @@ const Homepage = ({ initialSection = "" }) => {
                     event.preventDefault();
                     navigateToBuyCategory(
                       category.value || category.displayName,
-                      category.type
+                      category.type,
                     );
                   }
                 }}
@@ -1368,28 +1400,29 @@ const Homepage = ({ initialSection = "" }) => {
                     ? `${category.count} sản phẩm`
                     : `${category.count} items`}
                 </p>
-                {Array.isArray(category.children) && category.children.length > 0 && (
-                  <ul className="category-children">
-                    {category.children.map((child) => (
-                      <li key={child.slug}>
-                        <button
-                          type="button"
-                          className="category-child-btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            navigateToBuyCategory(
-                              child.value || child.displayName,
-                              child.type || category.type
-                            );
-                          }}
-                        >
-                          <span>{child.displayName}</span>
-                          <strong>{child.count}</strong>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {Array.isArray(category.children) &&
+                  category.children.length > 0 && (
+                    <ul className="category-children">
+                      {category.children.map((child) => (
+                        <li key={child.slug}>
+                          <button
+                            type="button"
+                            className="category-child-btn"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigateToBuyCategory(
+                                child.value || child.displayName,
+                                child.type || category.type,
+                              );
+                            }}
+                          >
+                            <span>{child.displayName}</span>
+                            <strong>{child.count}</strong>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
               </article>
             ))}
           </div>
@@ -1401,7 +1434,9 @@ const Homepage = ({ initialSection = "" }) => {
         <div className="container">
           <div className="program-section-head">
             <div>
-              <span className="program-eyebrow">Dụng cụ &amp; Thời trang Thể thao</span>
+              <span className="program-eyebrow">
+                Dụng cụ &amp; Thời trang Thể thao
+              </span>
               <h2>Danh mục nổi bật</h2>
             </div>
           </div>
@@ -1409,7 +1444,7 @@ const Homepage = ({ initialSection = "" }) => {
           <div className="program-grid">
             <article
               className="program-card"
-              onClick={() => navigate('/buy?purpose=rent&category=do-the-thao')}
+              onClick={() => navigate("/buy?purpose=rent&category=do-the-thao")}
             >
               <span className="program-card-tag">Đồ Thể Thao</span>
               <h3>Đồ thể thao &amp; Vợt Tennis</h3>
@@ -1417,13 +1452,14 @@ const Homepage = ({ initialSection = "" }) => {
             </article>
             <article
               className="program-card"
-              onClick={() => navigate('/buy?purpose=rent&category=vot-tennis')}
+              onClick={() => navigate("/buy?purpose=rent&category=vot-tennis")}
             >
               <span className="program-card-tag">Vợt Pickleball</span>
               <h3>Vợt Pickleball &amp; Tennis</h3>
-              <p>Chuyên nghiệp • Luyện tập &amp; Thi đấu • Tiêu chuẩn quốc tế</p>
+              <p>
+                Chuyên nghiệp • Luyện tập &amp; Thi đấu • Tiêu chuẩn quốc tế
+              </p>
             </article>
-
           </div>
 
           {/* ── FitFlow Booking Panel ── */}
@@ -1431,23 +1467,32 @@ const Homepage = ({ initialSection = "" }) => {
             <div>
               <span className="ff-booking-eyebrow">Đặt lịch hôm nay</span>
               <h2>Giữ sản phẩm đẹp trong 30 giây</h2>
-              <p>Chọn sản phẩm, size, thời gian nhận trả. FITFLOW xác nhận tình trạng và giữ hàng cho bạn.</p>
+              <p>
+                Chọn sản phẩm, size, thời gian nhận trả. FITFLOW xác nhận tình
+                trạng và giữ hàng cho bạn.
+              </p>
             </div>
             <div className="ff-booking-list">
               <div className="ff-booking-item">
                 <PackageCheck size={20} />
                 <span className="ff-booking-item-status">Sẵn</span>
-                <strong className="ff-booking-item-name">Đồ thể thao full set</strong>
+                <strong className="ff-booking-item-name">
+                  Đồ thể thao full set
+                </strong>
               </div>
               <div className="ff-booking-item">
                 <CalendarDays size={20} />
                 <span className="ff-booking-item-status">1–2 ngày</span>
-                <strong className="ff-booking-item-name">Vợt Pickleball &amp; Vợt Tennis</strong>
+                <strong className="ff-booking-item-name">
+                  Vợt Pickleball &amp; Vợt Tennis
+                </strong>
               </div>
               <div className="ff-booking-item">
                 <ShieldCheck size={20} />
                 <span className="ff-booking-item-status">Đã vệ sinh</span>
-                <strong className="ff-booking-item-name">Phụ kiện thể thao</strong>
+                <strong className="ff-booking-item-name">
+                  Phụ kiện thể thao
+                </strong>
               </div>
             </div>
           </div>
@@ -1459,7 +1504,9 @@ const Homepage = ({ initialSection = "" }) => {
         <div className="container">
           <div className="row-head">
             <h2>{t(lang, "rent.title")}</h2>
-            <Link to="/buy?purpose=rent&sort=top_liked">{t(lang, "rent.more")}</Link>
+            <Link to="/buy?purpose=rent&sort=top_liked">
+              {t(lang, "rent.more")}
+            </Link>
           </div>
           {topRentLoading && (
             <p className="rent-status">
@@ -1527,7 +1574,9 @@ const Homepage = ({ initialSection = "" }) => {
         <div className="container">
           <div className="row-head">
             <h2>{t(lang, "buy.title")}</h2>
-            <Link to="/buy?purpose=rent&category=co-phuc">{t(lang, "buy.more")}</Link>
+            <Link to="/buy?purpose=rent&category=co-phuc">
+              {t(lang, "buy.more")}
+            </Link>
           </div>
           {buyLoading && (
             <p className="rent-status">
@@ -1654,20 +1703,18 @@ const Homepage = ({ initialSection = "" }) => {
         <div className="container">
           <div className="row-head">
             <h2>{t(lang, "blog.title")}</h2>
-            <Link to="/blog">{lang === "vi" ? "Xem tất cả bài viết" : "View all posts"}</Link>
+            <Link to="/blog">
+              {lang === "vi" ? "Xem tất cả bài viết" : "View all posts"}
+            </Link>
           </div>
-          <p className="section-sub">
-            {t(lang, "blog.sub")}
-          </p>
+          <p className="section-sub">{t(lang, "blog.sub")}</p>
 
           {blogsLoading && (
             <p className="rent-status">
               {lang === "vi" ? "Đang tải bài viết..." : "Loading blog posts..."}
             </p>
           )}
-          {blogsError && (
-            <p className="rent-status warning">{blogsError}</p>
-          )}
+          {blogsError && <p className="rent-status warning">{blogsError}</p>}
 
           <div className="grid-3-cards">
             {displayedBlogs.map((post) => (
@@ -1697,17 +1744,15 @@ const Homepage = ({ initialSection = "" }) => {
 
       <section id="contact">
         <div className="container">
-          <h2 className="section-title">
-            {t(lang, "contact.title")}
-          </h2>
-          <p className="section-sub">
-            {t(lang, "contact.sub")}
-          </p>
+          <h2 className="section-title">{t(lang, "contact.title")}</h2>
+          <p className="section-sub">{t(lang, "contact.sub")}</p>
           <div className="contact-grid">
             <div className="contact-card">
               <span className="contact-label">Hotline</span>
               <strong>{CONTACT_INFO.phoneDisplay}</strong>
-              <span>Gọi trực tiếp để được tư vấn nhanh về thuê, mua và đặt lịch.</span>
+              <span>
+                Gọi trực tiếp để được tư vấn nhanh về thuê, mua và đặt lịch.
+              </span>
               <a className="contact-btn primary" href={CONTACT_INFO.phoneHref}>
                 Gọi ngay
               </a>
@@ -1728,7 +1773,10 @@ const Homepage = ({ initialSection = "" }) => {
             <div className="contact-card">
               <span className="contact-label">Instagram & Zalo</span>
               <strong>{CONTACT_INFO.instagramLabel}</strong>
-              <span>Xem mẫu mới và nhắn tin tư vấn trực tiếp qua Instagram hoặc Zalo.</span>
+              <span>
+                Xem mẫu mới và nhắn tin tư vấn trực tiếp qua Instagram hoặc
+                Zalo.
+              </span>
               <div className="contact-card-actions">
                 <a
                   className="contact-btn"
@@ -1757,22 +1805,14 @@ const Homepage = ({ initialSection = "" }) => {
         <div className="container">
           <div className="footer-grid">
             <div>
-              <p className="footer-title">
-                {t(lang, "brand.name")}
-              </p>
-              <p className="footer-text">
-                {t(lang, "footer.about")}
-              </p>
+              <p className="footer-title">{t(lang, "brand.name")}</p>
+              <p className="footer-text">{t(lang, "footer.about")}</p>
             </div>
 
             <div>
-              <p className="footer-title">
-                {t(lang, "footer.col1")}
-              </p>
+              <p className="footer-title">{t(lang, "footer.col1")}</p>
               <div className="f-links">
-                <a href="#rent">
-                  {t(lang, "nav.rent")}
-                </a>
+                <a href="#rent">{t(lang, "nav.rent")}</a>
                 <Link
                   to="/buy"
                   onClick={() => {
@@ -1781,34 +1821,21 @@ const Homepage = ({ initialSection = "" }) => {
                 >
                   {t(lang, "nav.buy")}
                 </Link>
-
               </div>
             </div>
 
             <div>
-              <p className="footer-title">
-                {t(lang, "footer.col2")}
-              </p>
+              <p className="footer-title">{t(lang, "footer.col2")}</p>
               <div className="f-links">
-                <a href="#policy">
-                  {t(lang, "policy.c1.t")}
-                </a>
-                <a href="#policy">
-                  {t(lang, "policy.c3.t")}
-                </a>
-                <a href="#policy">
-                  {t(lang, "policy.c4.t")}
-                </a>
-                <a href="#policy">
-                  {t(lang, "policy.c5.t")}
-                </a>
+                <a href="#policy">{t(lang, "policy.c1.t")}</a>
+                <a href="#policy">{t(lang, "policy.c3.t")}</a>
+                <a href="#policy">{t(lang, "policy.c4.t")}</a>
+                <a href="#policy">{t(lang, "policy.c5.t")}</a>
               </div>
             </div>
 
             <div>
-              <p className="footer-title">
-                {t(lang, "footer.col3")}
-              </p>
+              <p className="footer-title">{t(lang, "footer.col3")}</p>
               <p className="footer-text">
                 <span>{CONTACT_INFO.addressDisplay}</span>
                 <br />
@@ -1821,8 +1848,7 @@ const Homepage = ({ initialSection = "" }) => {
           </div>
 
           <div className="copy" id="cart">
-            © {year} {t(lang, "brand.name")}. All rights
-            reserved.
+            © {year} {t(lang, "brand.name")}. All rights reserved.
           </div>
         </div>
       </footer>
