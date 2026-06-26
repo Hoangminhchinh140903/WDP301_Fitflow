@@ -1,4 +1,4 @@
-const { OAuth2Client } = require('google-auth-library');
+const { OAuth2Client } = require("google-auth-library");
 
 const googleClient = new OAuth2Client();
 
@@ -10,12 +10,12 @@ const verifyGoogleIdToken = async (idToken) => {
   const googleClientId = getGoogleClientId();
 
   if (!googleClientId) {
-    throw new Error('GOOGLE_CLIENT_ID is not configured');
+    throw new Error("GOOGLE_CLIENT_ID is not configured");
   }
 
   const ticket = await googleClient.verifyIdToken({
     idToken,
-    audience: googleClientId
+    audience: googleClientId,
   });
 
   return ticket.getPayload();
@@ -23,5 +23,5 @@ const verifyGoogleIdToken = async (idToken) => {
 
 module.exports = {
   hasGoogleClientId,
-  verifyGoogleIdToken
+  verifyGoogleIdToken,
 };
