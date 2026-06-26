@@ -1,23 +1,48 @@
-﻿const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const User = require('../model/User.model');
-const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt');
-const { addRefreshToken, hasRefreshToken, removeRefreshToken } = require('../utils/refreshTokenStore');
-const { hasGoogleClientId, verifyGoogleIdToken } = require('../utils/googleAuth');
-const { hasSmtpConfig, sendResetPasswordEmail } = require('../utils/mailer');
-const { isValidEmail, isValidPhone, normalizeEmail, normalizePhone } = require('../utils/guestVerification');
-const { resolveUserAccess } = require('../services/accessControl.service');
-const { frontendUrl } = require('../config/app.config');
+﻿const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const User = require("../model/User.model");
+const {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} = require("../utils/jwt");
+const {
+  addRefreshToken,
+  hasRefreshToken,
+  removeRefreshToken,
+} = require("../utils/refreshTokenStore");
+const {
+  hasGoogleClientId,
+  verifyGoogleIdToken,
+} = require("../utils/googleAuth");
+const { hasSmtpConfig, sendResetPasswordEmail } = require("../utils/mailer");
+const {
+  isValidEmail,
+  isValidPhone,
+  normalizeEmail,
+  normalizePhone,
+} = require("../utils/guestVerification");
+const { resolveUserAccess } = require("../services/accessControl.service");
+const { frontendUrl } = require("../config/app.config");
 
-const getPrimaryAdminEmail = () => String(process.env.OWNER_EMAIL || '').trim().toLowerCase();
+const getPrimaryAdminEmail = () =>
+  String(process.env.OWNER_EMAIL || "")
+    .trim()
+    .toLowerCase();
 const isPrimaryAdminUser = (user) => {
   const primaryAdminEmail = getPrimaryAdminEmail();
   if (!primaryAdminEmail) {
     return false;
   }
 
-  return String(user?.role || '').trim().toLowerCase() === 'owner'
-    && String(user?.email || '').trim().toLowerCase() === primaryAdminEmail;
+  return (
+    String(user?.role || "")
+      .trim()
+      .toLowerCase() === "owner" &&
+    String(user?.email || "")
+      .trim()
+      .toLowerCase() === primaryAdminEmail
+  );
 };
 
 const sanitizeUser = (user, access = null) => ({
@@ -42,13 +67,13 @@ const sanitizeUser = (user, access = null) => ({
     role: user.role,
     roleLevel: Number(user.roleLevel || 0),
     permissions: [],
-  }
+  },
 });
 
 const createAuthTokens = (user) => {
   const tokenPayload = {
     userId: user._id.toString(),
-    role: user.role
+    role: user.role,
   };
 
   const accessToken = signAccessToken(tokenPayload);
@@ -57,7 +82,7 @@ const createAuthTokens = (user) => {
 
   return {
     accessToken,
-    refreshToken
+    refreshToken,
   };
 };
 
@@ -68,27 +93,28 @@ const handleDuplicateKeyError = (error, res) => {
 
   const duplicateField = Object.keys(error?.keyPattern || {})[0];
   const messageByField = {
-    email: 'Email đã được sử dụng',
-    phone: 'Số điện thoại đã được sử dụng'
+    email: "Email đã được sử dụng",
+    phone: "Số điện thoại đã được sử dụng",
   };
 
   return res.status(409).json({
     success: false,
-    message: messageByField[duplicateField] || 'Duplicate data'
+    message: messageByField[duplicateField] || "Duplicate data",
   });
 };
 
-const buildSanitizedUser = async (user) => sanitizeUser(user, await resolveUserAccess(user));
+const buildSanitizedUser = async (user) =>
+  sanitizeUser(user, await resolveUserAccess(user));
 
 const LOGIN_PORTAL = Object.freeze({
-  CUSTOMER: 'customer',
-  STAFF: 'staff'
+  CUSTOMER: "customer",
+  STAFF: "staff",
 });
 const STAFF_INVITE_RESULT = Object.freeze({
-  ACCEPTED: 'accepted',
-  INVALID: 'invalid',
-  EXPIRED: 'expired',
-  ERROR: 'error'
+  ACCEPTED: "accepted",
+  INVALID: "invalid",
+  EXPIRED: "expired",
+  ERROR: "error",
 });
 
 const buildStaffInviteRedirectUrl = (result) => {
@@ -99,30 +125,34 @@ const buildStaffInviteRedirectUrl = (result) => {
 };
 
 const normalizeLoginPortal = (portal) => {
-  if (typeof portal !== 'string') {
+  if (typeof portal !== "string") {
     return LOGIN_PORTAL.CUSTOMER;
   }
 
   const normalized = portal.trim().toLowerCase();
-  return normalized === LOGIN_PORTAL.STAFF ? LOGIN_PORTAL.STAFF : LOGIN_PORTAL.CUSTOMER;
+  return normalized === LOGIN_PORTAL.STAFF
+    ? LOGIN_PORTAL.STAFF
+    : LOGIN_PORTAL.CUSTOMER;
 };
 
 const isPortalAllowedForRole = (portal, role) => {
-  const normalizedRole = String(role || '').trim().toLowerCase();
+  const normalizedRole = String(role || "")
+    .trim()
+    .toLowerCase();
 
   if (portal === LOGIN_PORTAL.STAFF) {
-    return normalizedRole === 'owner' || normalizedRole === 'staff';
+    return normalizedRole === "owner" || normalizedRole === "staff";
   }
 
-  return normalizedRole === 'customer';
+  return normalizedRole === "customer";
 };
 
 const getPortalDeniedMessage = (portal) => {
   if (portal === LOGIN_PORTAL.STAFF) {
-    return 'Tài khoản khách hàng vui lòng đăng nhập tại cổng khách hàng.';
+    return "Tài khoản khách hàng vui lòng đăng nhập tại cổng khách hàng.";
   }
 
-  return 'Tài khoản staff/owner vui lòng đăng nhập tại cổng nhân sự.';
+  return "Tài khoản staff/owner vui lòng đăng nhập tại cổng nhân sự.";
 };
 
 const ensurePortalRoleAccess = (portal, user, res) => {
@@ -132,7 +162,7 @@ const ensurePortalRoleAccess = (portal, user, res) => {
 
   res.status(403).json({
     success: false,
-    message: getPortalDeniedMessage(portal)
+    message: getPortalDeniedMessage(portal),
   });
   return false;
 };
@@ -144,7 +174,7 @@ const signup = async (req, res) => {
     if (!name || !phone || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'name, phone, email, password are required'
+        message: "name, phone, email, password are required",
       });
     }
 
@@ -154,59 +184,59 @@ const signup = async (req, res) => {
     if (!isValidEmail(normalizedEmail)) {
       return res.status(400).json({
         success: false,
-        message: 'Email không hợp lệ'
+        message: "Email không hợp lệ",
       });
     }
 
     if (!isValidPhone(normalizedPhone)) {
       return res.status(400).json({
         success: false,
-        message: 'Số điện thoại không hợp lệ'
+        message: "Số điện thoại không hợp lệ",
       });
     }
 
     const [existingEmail, existingPhone] = await Promise.all([
       User.findOne({ email: normalizedEmail }),
-      User.findOne({ phone: normalizedPhone })
+      User.findOne({ phone: normalizedPhone }),
     ]);
 
     if (existingEmail) {
       return res.status(409).json({
         success: false,
-        message: 'Email đã được sử dụng'
+        message: "Email đã được sử dụng",
       });
     }
 
     if (existingPhone) {
       return res.status(409).json({
         success: false,
-        message: 'Số điện thoại đã được sử dụng'
+        message: "Số điện thoại đã được sử dụng",
       });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      role: 'customer',
+      role: "customer",
       name,
       phone: normalizedPhone,
       email: normalizedEmail,
       passwordHash,
-      authProvider: 'local',
-      status: 'active',
-      segment: 'new_user'
+      authProvider: "local",
+      status: "active",
+      segment: "new_user",
     });
 
     const { accessToken, refreshToken } = createAuthTokens(user);
 
     return res.status(201).json({
       success: true,
-      message: 'Signup successful',
+      message: "Signup successful",
       data: {
         accessToken,
         refreshToken,
-        user: await buildSanitizedUser(user)
-      }
+        user: await buildSanitizedUser(user),
+      },
     });
   } catch (error) {
     if (handleDuplicateKeyError(error, res)) {
@@ -215,8 +245,8 @@ const signup = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Error during signup',
-      error: error.message
+      message: "Error during signup",
+      error: error.message,
     });
   }
 };
@@ -229,16 +259,17 @@ const login = async (req, res) => {
     if ((!email && !phone) || !password) {
       return res.status(400).json({
         success: false,
-        message: 'email/phone and password are required'
+        message: "email/phone and password are required",
       });
     }
 
-    const hasEmail = typeof email === 'string' && email.trim();
+    const hasEmail = typeof email === "string" && email.trim();
     const normalizedEmail = hasEmail ? normalizeEmail(email) : null;
-    const normalizedPhone = typeof phone === 'string' ? normalizePhone(phone) : null;
+    const normalizedPhone =
+      typeof phone === "string" ? normalizePhone(phone) : null;
 
     const loginQuery = {
-      authProvider: 'local'
+      authProvider: "local",
     };
 
     if (normalizedEmail) {
@@ -247,38 +278,41 @@ const login = async (req, res) => {
       loginQuery.phone = normalizedPhone;
     }
 
-    const user = await User.findOne(loginQuery).select('+passwordHash');
+    const user = await User.findOne(loginQuery).select("+passwordHash");
 
     if (!user) {
       if (normalizedEmail) {
         const googleUserExists = await User.exists({
           email: normalizedEmail,
-          authProvider: 'google'
+          authProvider: "google",
         });
 
         return res.status(401).json({
           success: false,
-          message: googleUserExists ? 'Email này đăng ký bằng Google. Vui lòng đăng nhập Google.' : 'Invalid email or password'
+          message: googleUserExists
+            ? "Email này đăng ký bằng Google. Vui lòng đăng nhập Google."
+            : "Invalid email or password",
         });
       }
 
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
-    if (user.status === 'pending') {
+    if (user.status === "pending") {
       return res.status(403).json({
         success: false,
-        message: 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email mời và bấm Accept.'
+        message:
+          "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email mời và bấm Accept.",
       });
     }
 
-    if (user.status === 'locked') {
+    if (user.status === "locked") {
       return res.status(403).json({
         success: false,
-        message: 'Account is locked'
+        message: "Account is locked",
       });
     }
 
@@ -287,7 +321,7 @@ const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
@@ -299,18 +333,18 @@ const login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       data: {
         accessToken,
         refreshToken,
-        user: await buildSanitizedUser(user)
-      }
+        user: await buildSanitizedUser(user),
+      },
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Error during login',
-      error: error.message
+      message: "Error during login",
+      error: error.message,
     });
   }
 };
@@ -322,14 +356,14 @@ const googleLogin = async (req, res) => {
     if (!idToken) {
       return res.status(400).json({
         success: false,
-        message: 'idToken is required'
+        message: "idToken is required",
       });
     }
 
     if (!hasGoogleClientId()) {
       return res.status(500).json({
         success: false,
-        message: 'Google login is not configured'
+        message: "Google login is not configured",
       });
     }
 
@@ -339,51 +373,52 @@ const googleLogin = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Google account email is missing'
+        message: "Google account email is missing",
       });
     }
 
     if (payload.email_verified === false) {
       return res.status(400).json({
         success: false,
-        message: 'Google email is not verified'
+        message: "Google email is not verified",
       });
     }
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const randomPassword = crypto.randomBytes(32).toString("hex");
       const passwordHash = await bcrypt.hash(randomPassword, 10);
 
       user = await User.create({
-        role: 'customer',
-        name: payload.name || email.split('@')[0],
+        role: "customer",
+        name: payload.name || email.split("@")[0],
         phone: null,
         email,
         passwordHash,
-        authProvider: 'google',
-        status: 'active',
+        authProvider: "google",
+        status: "active",
         avatarUrl: payload.picture || null,
-        segment: 'new_user'
+        segment: "new_user",
       });
     } else {
-      if (user.status === 'pending') {
+      if (user.status === "pending") {
         return res.status(403).json({
           success: false,
-          message: 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email mời và bấm Accept.'
+          message:
+            "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email mời và bấm Accept.",
         });
       }
 
-      if (user.status === 'locked') {
+      if (user.status === "locked") {
         return res.status(403).json({
           success: false,
-          message: 'Account is locked'
+          message: "Account is locked",
         });
       }
 
       const updates = {};
-      if (typeof user.phone === 'string' && user.phone.startsWith('google_')) {
+      if (typeof user.phone === "string" && user.phone.startsWith("google_")) {
         updates.phone = null;
       }
       if (!user.name && payload.name) {
@@ -406,12 +441,12 @@ const googleLogin = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Google login successful',
+      message: "Google login successful",
       data: {
         accessToken,
         refreshToken,
-        user: await buildSanitizedUser(user)
-      }
+        user: await buildSanitizedUser(user),
+      },
     });
   } catch (error) {
     if (handleDuplicateKeyError(error, res)) {
@@ -420,8 +455,8 @@ const googleLogin = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Google login failed',
-      error: error.message
+      message: "Google login failed",
+      error: error.message,
     });
   }
 };
@@ -433,27 +468,30 @@ const forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'email is required'
+        message: "email is required",
       });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
     const user = await User.findOne({
       email: normalizedEmail,
-      authProvider: 'local'
-    }).select('+passwordResetToken +passwordResetExpires');
+      authProvider: "local",
+    }).select("+passwordResetToken +passwordResetExpires");
 
     const genericResponse = {
       success: true,
-      message: 'Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.'
+      message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.",
     };
 
     if (!user) {
       return res.status(200).json(genericResponse);
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
 
     user.passwordResetToken = hashedToken;
     user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
@@ -466,29 +504,29 @@ const forgotPassword = async (req, res) => {
         to: normalizedEmail,
         name: user.name,
         resetLink,
-        expiresInMinutes: 15
+        expiresInMinutes: 15,
       });
       return res.status(200).json(genericResponse);
     }
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       return res.status(200).json({
         success: true,
-        message: 'SMTP chưa cấu hình. Trả token/link để test ở môi trường dev.',
+        message: "SMTP chưa cấu hình. Trả token/link để test ở môi trường dev.",
         token: rawToken,
-        resetLink
+        resetLink,
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'SMTP chưa được cấu hình trên server'
+      message: "SMTP chưa được cấu hình trên server",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Không thể xử lý yêu cầu quên mật khẩu',
-      error: error.message
+      message: "Không thể xử lý yêu cầu quên mật khẩu",
+      error: error.message,
     });
   }
 };
@@ -500,29 +538,32 @@ const resetPassword = async (req, res) => {
     if (!token || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: 'token and newPassword are required'
+        message: "token and newPassword are required",
       });
     }
 
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'New password must be at least 6 characters'
+        message: "New password must be at least 6 characters",
       });
     }
 
-    const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token.trim())
+      .digest("hex");
 
     const user = await User.findOne({
-      authProvider: 'local',
+      authProvider: "local",
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: new Date() }
-    }).select('+passwordHash +passwordResetToken +passwordResetExpires');
+      passwordResetExpires: { $gt: new Date() },
+    }).select("+passwordHash +passwordResetToken +passwordResetExpires");
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Token không hợp lệ hoặc đã hết hạn'
+        message: "Token không hợp lệ hoặc đã hết hạn",
       });
     }
 
@@ -533,13 +574,13 @@ const resetPassword = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Đặt lại mật khẩu thành công'
+      message: "Đặt lại mật khẩu thành công",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Không thể đặt lại mật khẩu',
-      error: error.message
+      message: "Không thể đặt lại mật khẩu",
+      error: error.message,
     });
   }
 };
@@ -551,44 +592,44 @@ const refresh = async (req, res) => {
     if (!refreshToken) {
       return res.status(400).json({
         success: false,
-        message: 'refreshToken is required'
+        message: "refreshToken is required",
       });
     }
 
     if (!hasRefreshToken(refreshToken)) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid refresh token'
+        message: "Invalid refresh token",
       });
     }
 
     const payload = verifyRefreshToken(refreshToken);
     const user = await User.findById(payload.userId);
 
-    if (!user || user.status === 'locked') {
+    if (!user || user.status === "locked") {
       removeRefreshToken(refreshToken);
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized'
+        message: "Unauthorized",
       });
     }
 
     const accessToken = signAccessToken({
       userId: user._id.toString(),
-      role: user.role
+      role: user.role,
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Refresh successful',
+      message: "Refresh successful",
       data: {
-        accessToken
-      }
+        accessToken,
+      },
     });
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid refresh token'
+      message: "Invalid refresh token",
     });
   }
 };
@@ -602,7 +643,7 @@ const logout = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: 'Logout successful'
+    message: "Logout successful",
   });
 };
 
@@ -613,52 +654,60 @@ const getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Get profile successful',
-      data: await buildSanitizedUser(user)
+      message: "Get profile successful",
+      data: await buildSanitizedUser(user),
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Error getting profile',
-      error: error.message
+      message: "Error getting profile",
+      error: error.message,
     });
   }
 };
 
 const acceptStaffInvite = async (req, res) => {
   try {
-    const token = String(req.query?.token || '').trim();
+    const token = String(req.query?.token || "").trim();
     if (!token) {
-      return res.redirect(buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.INVALID));
+      return res.redirect(
+        buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.INVALID),
+      );
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
-      role: 'staff',
-      staffInviteToken: tokenHash
-    }).select('+staffInviteToken +staffInviteExpires');
+      role: "staff",
+      staffInviteToken: tokenHash,
+    }).select("+staffInviteToken +staffInviteExpires");
 
     if (!user) {
-      return res.redirect(buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.INVALID));
+      return res.redirect(
+        buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.INVALID),
+      );
     }
 
     if (!user.staffInviteExpires || user.staffInviteExpires <= new Date()) {
-      return res.redirect(buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.EXPIRED));
+      return res.redirect(
+        buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.EXPIRED),
+      );
     }
 
-    user.status = 'active';
+    user.status = "active";
     user.staffInviteToken = null;
     user.staffInviteExpires = null;
     user.staffInviteAcceptedAt = new Date();
     await user.save();
 
-    return res.redirect(buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.ACCEPTED));
+    return res.redirect(
+      buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.ACCEPTED),
+    );
   } catch (error) {
     return res.redirect(buildStaffInviteRedirectUrl(STAFF_INVITE_RESULT.ERROR));
   }
@@ -673,6 +722,5 @@ module.exports = {
   refresh,
   logout,
   getCurrentUser,
-  acceptStaffInvite
+  acceptStaffInvite,
 };
-
