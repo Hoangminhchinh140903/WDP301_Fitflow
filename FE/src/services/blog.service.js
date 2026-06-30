@@ -78,3 +78,16 @@ export const uploadBlogThumbnailApi = async (file) => {
   const response = await uploadBlogThumbnailRequest(file);
   return response.data;
 };
+
+// làm vi?c Blog
+
+/*
+ * ==========================================
+ * B? sung c?p nh?t tính nang Blog
+ * Tính nang dang du?c hoàn thi?n
+ * Ngày c?p nh?t: 2026-06-30
+ * Làm vi?c Blog - C?i thi?n UI/UX
+ * T?i uu hóa API tr? v?
+ * Chu?n b? cho các tính nang nâng cao (TBD)
+ * ==========================================
+ */
