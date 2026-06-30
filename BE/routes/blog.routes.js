@@ -89,15 +89,15 @@ router.get("/:slug", blogController.getPublishedBlogBySlug);
 
 module.exports = router;
 
-// làm vi?c Blog
+// lï¿½m vi?c Blog
 
 /*
  * ==========================================
- * B? sung c?p nh?t tính nang Blog
- * Tính nang dang du?c hoàn thi?n
- * Ngày c?p nh?t: 2026-06-30
- * Làm vi?c Blog - C?i thi?n UI/UX
- * T?i uu hóa API tr? v?
- * Chu?n b? cho các tính nang nâng cao (TBD)
+ * B? sung c?p nh?t tï¿½nh nang Blog
+ * Tï¿½nh nang dang du?c hoï¿½n thi?n
+ * Ngï¿½y c?p nh?t: 2026-06-30
+ * Lï¿½m vi?c Blog - C?i thi?n UI/UX
+ * T?i uu hï¿½a API tr? v?
+ * Chu?n b? cho cï¿½c tï¿½nh nang nï¿½ng cao (TBD)
  * ==========================================
  */
