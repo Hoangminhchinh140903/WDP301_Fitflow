@@ -1,86 +1,103 @@
-const express = require('express');
-const blogController = require('../controllers/blog.controller');
-const { PERMISSIONS } = require('../access-control/permissions');
-const { requireAuth, checkPermission, checkRole } = require('../middleware/auth.middleware');
-const { uploadBlogThumbnail } = require('../middleware/upload.middleware');
+const express = require("express");
+const blogController = require("../controllers/blog.controller");
+const { PERMISSIONS } = require("../access-control/permissions");
+const {
+  requireAuth,
+  checkPermission,
+  checkRole,
+} = require("../middleware/auth.middleware");
+const { uploadBlogThumbnail } = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
 router.post(
-  '/',
+  "/",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.create),
-  blogController.createBlog
+  blogController.createBlog,
 );
 router.put(
-  '/:id',
+  "/:id",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.update),
-  blogController.updateBlog
+  blogController.updateBlog,
 );
 router.get(
-  '/my',
+  "/my",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.view),
-  blogController.getMyBlogs
+  blogController.getMyBlogs,
 );
 router.post(
-  '/:id/submit',
+  "/:id/submit",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.submit),
-  blogController.submitBlog
+  blogController.submitBlog,
 );
 router.post(
-  '/upload-thumbnail',
+  "/upload-thumbnail",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.create),
   uploadBlogThumbnail,
-  blogController.uploadBlogThumbnail
+  blogController.uploadBlogThumbnail,
 );
 
 router.get(
-  '/pending',
+  "/pending",
   requireAuth,
-  checkRole('owner'),
+  checkRole("owner"),
   checkPermission(PERMISSIONS.blog.post.approve),
-  blogController.getPendingBlogs
+  blogController.getPendingBlogs,
 );
 router.get(
-  '/approved',
+  "/approved",
   requireAuth,
-  checkRole('owner'),
+  checkRole("owner"),
   checkPermission(PERMISSIONS.blog.post.approve),
-  blogController.getApprovedBlogs
+  blogController.getApprovedBlogs,
 );
 router.post(
-  '/:id/approve',
+  "/:id/approve",
   requireAuth,
-  checkRole('owner'),
+  checkRole("owner"),
   checkPermission(PERMISSIONS.blog.post.approve),
-  blogController.approveBlog
+  blogController.approveBlog,
 );
 router.post(
-  '/:id/reject',
+  "/:id/reject",
   requireAuth,
-  checkRole('owner'),
+  checkRole("owner"),
   checkPermission(PERMISSIONS.blog.post.approve),
-  blogController.rejectBlog
+  blogController.rejectBlog,
 );
 router.post(
-  '/:id/publish',
+  "/:id/publish",
   requireAuth,
-  checkRole('owner'),
+  checkRole("owner"),
   checkPermission(PERMISSIONS.blog.post.publish),
-  blogController.publishBlog
+  blogController.publishBlog,
 );
 router.delete(
-  '/:id',
+  "/:id",
   requireAuth,
   checkPermission(PERMISSIONS.blog.post.delete),
-  blogController.deleteBlog
+  blogController.deleteBlog,
 );
 
-router.get('/', blogController.getPublishedBlogs);
-router.get('/:slug', blogController.getPublishedBlogBySlug);
+router.get("/", blogController.getPublishedBlogs);
+router.get("/:slug", blogController.getPublishedBlogBySlug);
 
 module.exports = router;
+
+// làm vi?c Blog
+
+/*
+ * ==========================================
+ * B? sung c?p nh?t tính nang Blog
+ * Tính nang dang du?c hoàn thi?n
+ * Ngày c?p nh?t: 2026-06-30
+ * Làm vi?c Blog - C?i thi?n UI/UX
+ * T?i uu hóa API tr? v?
+ * Chu?n b? cho các tính nang nâng cao (TBD)
+ * ==========================================
+ */
