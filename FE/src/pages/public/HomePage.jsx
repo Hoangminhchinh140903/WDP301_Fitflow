@@ -200,7 +200,7 @@ const Homepage = ({ initialSection = "" }) => {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
   const lang = "vi";
-  const setLang = () => {};
+  const setLang = () => { };
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isSliderPaused, setIsSliderPaused] = useState(false);
   const [activeSection, setActiveSection] = useState(initialSection || "home");
@@ -367,11 +367,11 @@ const Homepage = ({ initialSection = "" }) => {
     }
 
     categorySlideIntervalRef.current = setInterval(() => {
-      setCategorySlideIndex((prev) =>
-        featuredCategories.length === 0
-          ? 0
-          : (prev + 1) % featuredCategories.length,
-      );
+      setCategorySlideIndex((prev) => {
+        if (featuredCategories.length <= categoryVisibleCount) return 0;
+        const maxIndex = featuredCategories.length - categoryVisibleCount;
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
     }, CATEGORY_SLIDE_MS);
 
     return () => {
@@ -677,10 +677,10 @@ const Homepage = ({ initialSection = "" }) => {
   const getLikeCount = (item) => {
     const directValue = Number(
       item?.likeCount ??
-        item?.likes ??
-        item?.favoriteCount ??
-        item?.wishlistCount ??
-        item?.totalLikes,
+      item?.likes ??
+      item?.favoriteCount ??
+      item?.wishlistCount ??
+      item?.totalLikes,
     );
     if (Number.isFinite(directValue) && directValue >= 0) {
       return directValue;
@@ -700,30 +700,30 @@ const Homepage = ({ initialSection = "" }) => {
   const displayedRentProducts =
     (topRentProducts.length > 0 ? topRentProducts : buyProducts).length > 0
       ? [...(topRentProducts.length > 0 ? topRentProducts : buyProducts)]
-          .map((item) => ({
-            ...item,
-            __likeCount: getLikeCount(item),
-          }))
-          .filter((item) => hasRealImage(item.imageUrl))
-          .filter((item) => Number(item.baseRentPrice || 0) > 0)
-          .filter(
-            (item) =>
-              !["Apparel", "Accessories"].includes(
-                String(item.category || "").trim(),
-              ),
-          )
-          .filter((item) => item.__likeCount > 0)
-          .sort((a, b) => b.__likeCount - a.__likeCount)
-          .slice(0, HOMEPAGE_PRODUCT_LIMIT)
-          .map((item) => ({
-            id: item._id,
-            name: item.name,
-            meta:
-              lang === "vi"
-                ? `${item.category} • ${item.__likeCount} lượt yêu thích • ${formatCurrency(item.baseRentPrice)}/ngày`
-                : `${item.category} • ${item.__likeCount} likes • ${formatCurrency(item.baseRentPrice)}/day`,
-            imageUrl: item.imageUrl,
-          }))
+        .map((item) => ({
+          ...item,
+          __likeCount: getLikeCount(item),
+        }))
+        .filter((item) => hasRealImage(item.imageUrl))
+        .filter((item) => Number(item.baseRentPrice || 0) > 0)
+        .filter(
+          (item) =>
+            !["Apparel", "Accessories"].includes(
+              String(item.category || "").trim(),
+            ),
+        )
+        .filter((item) => item.__likeCount > 0)
+        .sort((a, b) => b.__likeCount - a.__likeCount)
+        .slice(0, HOMEPAGE_PRODUCT_LIMIT)
+        .map((item) => ({
+          id: item._id,
+          name: item.name,
+          meta:
+            lang === "vi"
+              ? `${item.category} • ${item.__likeCount} lượt yêu thích • ${formatCurrency(item.baseRentPrice)}/ngày`
+              : `${item.category} • ${item.__likeCount} likes • ${formatCurrency(item.baseRentPrice)}/day`,
+          imageUrl: item.imageUrl,
+        }))
       : [];
 
   const canViewProductDetail = (productId) => Boolean(productId);
@@ -795,29 +795,29 @@ const Homepage = ({ initialSection = "" }) => {
   const displayedBlogs =
     blogs.length > 0
       ? blogs.slice(0, 3).map((item, index) => {
-          const rawContent = String(item?.content || "").trim();
-          const lines = rawContent
-            .split(/\r?\n/)
-            .map((line) => line.trim())
-            .filter(Boolean);
-          const title =
-            String(item?.title || "").trim() ||
-            lines[0] ||
-            (lang === "vi" ? `Bài viết ${index + 1}` : `Post ${index + 1}`);
-          const body = lines.slice(1).join(" ") || rawContent;
-          const excerpt = body.length > 180 ? `${body.slice(0, 177)}...` : body;
+        const rawContent = String(item?.content || "").trim();
+        const lines = rawContent
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const title =
+          String(item?.title || "").trim() ||
+          lines[0] ||
+          (lang === "vi" ? `Bài viết ${index + 1}` : `Post ${index + 1}`);
+        const body = lines.slice(1).join(" ") || rawContent;
+        const excerpt = body.length > 180 ? `${body.slice(0, 177)}...` : body;
 
-          return {
-            id: item?._id || `blog-${index + 1}`,
-            title,
-            thumbnail: normalizeImageUrl(String(item?.thumbnail || "").trim()),
-            excerpt:
-              excerpt ||
-              (lang === "vi"
-                ? "Nội dung đang được cập nhật."
-                : "Content is being updated."),
-          };
-        })
+        return {
+          id: item?._id || `blog-${index + 1}`,
+          title,
+          thumbnail: normalizeImageUrl(String(item?.thumbnail || "").trim()),
+          excerpt:
+            excerpt ||
+            (lang === "vi"
+              ? "Nội dung đang được cập nhật."
+              : "Content is being updated."),
+        };
+      })
       : fallbackBlogPosts;
 
   const displayedCategories = useMemo(() => {
@@ -1349,82 +1349,95 @@ const Homepage = ({ initialSection = "" }) => {
           {categoriesError && (
             <p className="category-status warning">{categoriesError}</p>
           )}
-          <div
-            className="category-grid category-grid-row"
-            style={{ "--category-columns": displayedCategories.length }}
-          >
-            {displayedCategories.map((category, index) => (
-              <article
-                className="category-card category-card-clickable"
-                key={`${category.slug}-${index}`}
-                role="button"
-                tabIndex={0}
-                onClick={() =>
-                  navigateToBuyCategory(
-                    category.value || category.displayName,
-                    category.type,
-                  )
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
+          <div className="category-slider-container" style={{ overflow: "hidden", width: "100%" }}>
+            <div
+              className="category-track"
+              style={{
+                display: "flex",
+                gap: "20px",
+                transition: "transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)",
+                transform: `translateX(-${featuredCategories.length > 0 ? categorySlideIndex * (100 / featuredCategories.length) : 0}%)`,
+                width: `${featuredCategories.length > 0 ? (featuredCategories.length / categoryVisibleCount) * 100 : 100}%`
+              }}
+            >
+              {featuredCategories.map((category, index) => (
+                <article
+                  className="category-card category-card-clickable"
+                  key={`${category.slug}-${index}`}
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    flex: `0 0 calc((100% - ${(categoryVisibleCount - 1) * 20}px) / ${categoryVisibleCount})`,
+                    width: `calc((100% - ${(categoryVisibleCount - 1) * 20}px) / ${categoryVisibleCount})`,
+                    boxSizing: "border-box"
+                  }}
+                  onClick={() =>
                     navigateToBuyCategory(
                       category.value || category.displayName,
                       category.type,
-                    );
+                    )
                   }
-                }}
-              >
-                <div className="category-image-wrap">
-                  {category.imageUrl ? (
-                    <img
-                      src={category.imageUrl}
-                      alt={category.displayName}
-                      className="category-image"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="category-image placeholder">
-                      {lang === "vi" ? "Chưa có ảnh" : "No image"}
-                    </div>
-                  )}
-                </div>
-                <div className="category-card-top">
-                  <h3>{category.displayName}</h3>
-                  <span className={"category-type " + category.type}>
-                    {getCategoryTypeLabel(category.type)}
-                  </span>
-                </div>
-                <p className="category-count">
-                  {lang === "vi"
-                    ? `${category.count} sản phẩm`
-                    : `${category.count} items`}
-                </p>
-                {Array.isArray(category.children) &&
-                  category.children.length > 0 && (
-                    <ul className="category-children">
-                      {category.children.map((child) => (
-                        <li key={child.slug}>
-                          <button
-                            type="button"
-                            className="category-child-btn"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              navigateToBuyCategory(
-                                child.value || child.displayName,
-                                child.type || category.type,
-                              );
-                            }}
-                          >
-                            <span>{child.displayName}</span>
-                            <strong>{child.count}</strong>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </article>
-            ))}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigateToBuyCategory(
+                        category.value || category.displayName,
+                        category.type,
+                      );
+                    }
+                  }}
+                >
+                  <div className="category-image-wrap">
+                    {category.imageUrl ? (
+                      <img
+                        src={category.imageUrl}
+                        alt={category.displayName}
+                        className="category-image"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="category-image placeholder">
+                        {lang === "vi" ? "Chưa có ảnh" : "No image"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="category-card-top">
+                    <h3>{category.displayName}</h3>
+                    <span className={"category-type " + category.type}>
+                      {getCategoryTypeLabel(category.type)}
+                    </span>
+                  </div>
+                  <p className="category-count">
+                    {lang === "vi"
+                      ? `${category.count} sản phẩm`
+                      : `${category.count} items`}
+                  </p>
+                  {Array.isArray(category.children) &&
+                    category.children.length > 0 && (
+                      <ul className="category-children">
+                        {category.children.map((child) => (
+                          <li key={child.slug}>
+                            <button
+                              type="button"
+                              className="category-child-btn"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                navigateToBuyCategory(
+                                  child.value || child.displayName,
+                                  child.type || category.type,
+                                );
+                              }}
+                            >
+                              <span>{child.displayName}</span>
+                              <strong>{child.count}</strong>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
