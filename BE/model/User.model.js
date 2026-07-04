@@ -101,6 +101,55 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  preferences: {
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'light'
+    },
+    language: {
+      type: String,
+      enum: ['vi', 'en'],
+      default: 'vi'
+    },
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      push: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false }
+    }
+  },
+  securitySettings: {
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false
+    },
+    loginAlertsEnabled: {
+      type: Boolean,
+      default: true
+    },
+    passwordLastChanged: {
+      type: Date,
+      default: Date.now
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lockoutUntil: {
+      type: Date,
+      default: null
+    }
+  },
+  profileCompleteness: {
+    type: Number,
+    default: 0
+  },
+  customSettings: {
+    type: Map,
+    of: String,
+    default: {}
   }
 }, {
   timestamps: true
