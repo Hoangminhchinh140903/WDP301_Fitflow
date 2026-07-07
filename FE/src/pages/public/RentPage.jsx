@@ -30,10 +30,9 @@ const RENT_PAGE_SIZE = 12;
 const PUBLIC_PRODUCT_API_LIMIT = 50;
 
 const OCCASION_KEYWORDS = {
-  wedding: ['cuoi', 'wedding', 'le cuoi', 'an hoi'],
-  festival: ['le hoi', 'festival', 'su kien', 'bieu dien'],
-  photoshoot: ['chup anh', 'photoshoot', 'co phuc', 'co trang'],
-  travel: ['du lich', 'hoi an', 'checkin'],
+  tournament: ['giai dau', 'tournament', 'thi dau', 'cup', 'chuyen nghiep'],
+  training: ['tap luyen', 'training', 'hoc', 'co ban', 'phong trao'],
+  friendly: ['giao huu', 'friendly', 'giai tri', 'choi vui'],
 };
 
 const priceInRange = (price, range) => {
@@ -547,7 +546,7 @@ export default function RentPage() {
         onClose={closeBookingModal}
         selectedProduct={selectedBookingProduct}
         onSuccess={() => {
-          showToast('Đặt lịch thử vợt/sân thành công.');
+          showToast('Đặt lịch thuê vợt thành công.');
         }}
       />
 
