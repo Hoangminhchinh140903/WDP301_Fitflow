@@ -52,6 +52,12 @@ router.get('/:productId/available-instances', productController.getAvailableInst
 router.get('/:id/similar', productController.getSimilarProducts);
 router.get('/:id/size-guide', sizeGuideController.getProductSizeGuide);
 router.get('/:id/size-guide/recommendation', sizeGuideController.getProductSizeRecommendation);
+
+// Advanced product features
+router.get('/:id/price-history', productController.getProductPriceHistory);
+router.get('/:id/smart-recommendations', productController.getSmartProductRecommendations);
+router.get('/:id/export-pdf', productController.exportProductSpecPDF);
+
 router.get('/', productController.getProducts);
 router.get('/top-rented', productController.getTopRentedProducts);
 router.get('/top-liked', productController.getTopLikedProducts);
