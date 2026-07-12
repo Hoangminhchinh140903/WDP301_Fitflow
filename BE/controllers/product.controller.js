@@ -1105,6 +1105,36 @@ const getTopSoldProducts = async (req, res) => {
   }
 };
 
+const logProductView = async (productId, req) => {
+  try {
+    const userId = req.user ? req.user.id : null;
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const referrer = req.headers['referer'] || '';
+    
+    let deviceType = 'unknown';
+    if (userAgent.toLowerCase().includes('mobile')) {
+      deviceType = 'mobile';
+    } else if (userAgent.toLowerCase().includes('tablet')) {
+      deviceType = 'tablet';
+    } else if (userAgent.toLowerCase().includes('windows') || userAgent.toLowerCase().includes('macintosh') || userAgent.toLowerCase().includes('linux')) {
+      deviceType = 'desktop';
+    }
+
+    const ProductViewLog = require('../model/ProductViewLog.model');
+    await ProductViewLog.create({
+      productId,
+      userId,
+      ipAddress,
+      userAgent,
+      referrer,
+      deviceType
+    });
+  } catch (error) {
+    console.error('Failed to log product view:', error.message);
+  }
+};
+
 const getProductById = async (req, res) => {
   try {
     const lang = getRequestLang(req.query.lang);
@@ -1121,6 +1151,10 @@ const getProductById = async (req, res) => {
       availableQuantity: instances.filter((item) => item.lifecycleStatus === 'Available').length,
       rentableQuantity: countRentableInstances(instances),
     };
+
+    // Log product view metrics asynchronously
+    logProductView(product._id, req);
+
     return res.status(200).json({
       success: true,
       data: sanitizeProduct(product, quantity, lang),
@@ -2040,6 +2074,225 @@ const getAvailableInstances = async (req, res) => {
   }
 };
 
+// --- PRODUCT PRICE HISTORY, RECOMMENDATIONS & PDF SPEC GENERATION ---
+
+const getProductPriceHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ProductPriceHistory = require('../model/ProductPriceHistory.model');
+    
+    const history = await ProductPriceHistory.find({ productId: id })
+      .populate('updatedBy', 'name email')
+      .sort({ changedAt: -1 })
+      .lean();
+      
+    return res.status(200).json({
+      success: true,
+      data: history
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy lịch sử giá sản phẩm',
+      error: error.message
+    });
+  }
+};
+
+const getSmartProductRecommendations = async (req, res) => {
+  try {
+    const lang = getRequestLang(req.query.lang);
+    const { id } = req.params;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 4, 1), 12);
+    
+    const baseProduct = await Product.findById(id).lean();
+    if (!baseProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+    
+    const category = resolveProductCategory(baseProduct, lang);
+    
+    // Find candidate products
+    const candidates = await Product.find({
+      _id: { $ne: baseProduct._id },
+      isDraft: false
+    }).lean();
+    
+    // Score each candidate
+    const scored = candidates.map(item => {
+      let score = 0;
+      
+      // Category match
+      const itemCategory = resolveProductCategory(item, lang);
+      if (itemCategory === category) {
+        score += 40;
+      } else if (item.categoryPath?.parent === baseProduct.categoryPath?.parent && baseProduct.categoryPath?.parent) {
+        score += 20;
+      }
+      
+      // Color match
+      if (item.color && baseProduct.color && item.color.toLowerCase() === baseProduct.color.toLowerCase()) {
+        score += 15;
+      }
+      
+      // Price proximity (Rent Price)
+      const priceDiff = Math.abs(item.baseRentPrice - baseProduct.baseRentPrice);
+      const avgPrice = (item.baseRentPrice + baseProduct.baseRentPrice) / 2 || 1;
+      const pctDiff = priceDiff / avgPrice;
+      if (pctDiff <= 0.1) score += 25;
+      else if (pctDiff <= 0.25) score += 15;
+      else if (pctDiff <= 0.5) score += 5;
+      
+      // Popularity & Rating
+      score += Math.min(item.likeCount || 0, 10);
+      score += (item.averageRating || 0) * 2;
+      
+      return {
+        product: item,
+        score
+      };
+    });
+    
+    // Sort descending
+    scored.sort((a, b) => b.score - a.score);
+    
+    const selected = scored.slice(0, limit).map(s => sanitizeProduct(s.product, {}, lang));
+    
+    return res.status(200).json({
+      success: true,
+      data: selected
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy gợi ý sản phẩm thông minh',
+      error: error.message
+    });
+  }
+};
+
+const exportProductSpecPDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lang = getRequestLang(req.query.lang);
+    const product = await Product.findById(id).lean();
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    const instances = await ProductInstance.find({ productId: product._id }).lean();
+    const quantity = {
+      totalQuantity: instances.length,
+      availableQuantity: instances.filter((item) => item.lifecycleStatus === 'Available').length,
+      rentableQuantity: countRentableInstances(instances),
+    };
+    
+    const sanitized = sanitizeProduct(product, quantity, lang);
+    
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=fitflow_product_${id}.pdf`);
+    
+    doc.pipe(res);
+    
+    // Design a beautiful PDF layout
+    // Title Banner
+    doc.rect(0, 0, 595.28, 120).fill('#2c3e50');
+    doc.fillColor('#ffffff').fontSize(24).text('FITFLOW PRODUCT SPECIFICATION', 50, 40, { align: 'center', bold: true });
+    doc.fontSize(12).text('BÁO CÁO CHI TIẾT SẢN PHẨM', 50, 70, { align: 'center' });
+    
+    doc.moveDown(4);
+    doc.fillColor('#333333');
+    
+    // Section: General Information
+    doc.fontSize(16).fillColor('#2980b9').text('1. Thông tin chung (General Info)', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor('#333333');
+    
+    const leftColX = 50;
+    const rightColX = 300;
+    let yPos = doc.y;
+    
+    doc.text(`Tên sản phẩm (Name): ${sanitized.name}`, leftColX, yPos);
+    doc.text(`Mã sản phẩm (ID): ${sanitized.id}`, rightColX, yPos);
+    
+    yPos += 20;
+    doc.text(`Danh mục (Category): ${sanitized.category}`, leftColX, yPos);
+    doc.text(`Màu sắc (Color): ${sanitized.color}`, rightColX, yPos);
+    
+    yPos += 20;
+    doc.text(`Mô tả (Description): ${sanitized.description || 'Không có mô tả'}`, leftColX, yPos, { width: 500 });
+    
+    doc.moveDown(2);
+    
+    // Section: Pricing
+    doc.fontSize(16).fillColor('#2980b9').text('2. Chính sách giá (Pricing Policy)', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor('#333333');
+    
+    yPos = doc.y;
+    doc.text(`Giá thuê cơ bản (Rent/Day): ${sanitized.baseRentPrice.toLocaleString('vi-VN')} VND`, leftColX, yPos);
+    doc.text(`Giá mua đứt (Sale Price): ${sanitized.baseSalePrice.toLocaleString('vi-VN')} VND`, rightColX, yPos);
+    
+    yPos += 20;
+    doc.text(`Đặt cọc (Deposit): ${sanitized.depositAmount.toLocaleString('vi-VN')} VND`, leftColX, yPos);
+    doc.text(`Bồi thường tối đa (Buyout): ${sanitized.buyoutValue.toLocaleString('vi-VN')} VND`, rightColX, yPos);
+    
+    doc.moveDown(2);
+    
+    // Section: Inventory Breakdown
+    doc.fontSize(16).fillColor('#2980b9').text('3. Tồn kho chi tiết (Inventory Breakdown)', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor('#333333');
+    
+    yPos = doc.y;
+    doc.text(`Tổng số lượng (Total): ${sanitized.totalQuantity} chiếc`, leftColX, yPos);
+    doc.text(`Sẵn sàng cho thuê (Available): ${sanitized.availableQuantity} chiếc`, rightColX, yPos);
+    
+    yPos += 20;
+    doc.text(`Có thể thuê tiếp (Rentable): ${sanitized.rentableQuantity} chiếc`, leftColX, yPos);
+    
+    doc.moveDown(2);
+    
+    // Size breakdown table
+    if (sanitized.hasSizes && sanitized.sizes.length > 0) {
+      doc.text('Chi tiết theo kích thước (Sizes Detail):', leftColX, doc.y, { bold: true });
+      doc.moveDown(0.5);
+      
+      // Draw Table Header
+      yPos = doc.y;
+      doc.rect(50, yPos, 500, 20).fill('#ecf0f1');
+      doc.fillColor('#2c3e50').text('Kích thước (Size)', 70, yPos + 4, { width: 200 });
+      doc.text('Số lượng hiện có (Quantity)', 300, yPos + 4, { width: 200 });
+      
+      sanitized.sizes.forEach((row) => {
+        yPos += 20;
+        doc.rect(50, yPos, 500, 20).stroke('#bdc3c7');
+        doc.fillColor('#333333').text(row.size, 70, yPos + 4);
+        doc.text(String(row.quantity), 300, yPos + 4);
+      });
+    }
+    
+    doc.moveDown(3);
+    
+    // Footer Note
+    doc.fontSize(10).fillColor('#7f8c8d').text('Tài liệu được kết xuất tự động từ hệ thống quản lý FitFlow.', 50, 750, { align: 'center' });
+    
+    doc.end();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi khi kết xuất PDF sản phẩm',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getProducts,
   listOwnerProducts,
@@ -2065,5 +2318,10 @@ module.exports = {
   createProductInstance,
   deleteProductInstance,
   getAvailableInstances,
+  
+  // Advanced features
+  getProductPriceHistory,
+  getSmartProductRecommendations,
+  exportProductSpecPDF
 };
 
