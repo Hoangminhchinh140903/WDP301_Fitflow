@@ -5,13 +5,20 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { Shirt, PackageCheck, CalendarDays, ShieldCheck } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  Shirt, PackageCheck, CalendarDays, ShieldCheck,
+  Search, Calendar, User, Clock, ChevronRight, Tag, BookOpen, ArrowRight, 
+  Share2, Heart, MessageSquare, ArrowLeft, Send, Facebook, Twitter, Link2, 
+  CheckCircle, Plus, Edit2, Trash2, Eye, ThumbsUp, X, Filter, BarChart2, 
+  Users, AlertCircle, RefreshCw, LayoutGrid, List, Package, CreditCard, ShoppingBag, Truck
+} from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Header from "../../components/common/Header";
 import { getPublishedBlogsApi } from "../../services/blog.service";
 import { API_BASE_URL } from "../../config/env";
 import "../../style/pages/HomePage.css";
+import "../../style/pages/BlogPage.css";
 import logo from "../../assets/logo/logo.png";
 import banner1 from "../../assets/banner/banner 1.png";
 import banner2 from "../../assets/banner/banner2 (1).png";
@@ -1866,6 +1873,490 @@ const Homepage = ({ initialSection = "" }) => {
         </div>
       </footer>
     </>
+  );
+};
+
+// Comprehensive mock database of blog posts for FitFlow
+const MOCK_BLOGS = [
+  {
+    id: "1",
+    title: "10 Essential Gym Outfits for Maximum Performance and Comfort",
+    slug: "10-essential-gym-outfits-maximum-performance",
+    summary: "Discover how the right workout apparel can boost your training efficiency, prevent injuries, and keep you motivated throughout your fitness journey.",
+    content: `
+      <h2>The Science of Activewear: Why What You Wear Matters</h2>
+      <p>When it comes to working out, many people focus solely on their routine, nutrition, and recovery. While these are undoubtedly the pillars of physical progress, the apparel you choose plays a significant role in your performance, safety, and mental state during exercise. Modern athletic wear is no longer just about aesthetics; it is a blend of textile technology, ergonomics, and sports science.</p>
+      
+      <h3>1. Moisture-Wicking Fabrics: The Ultimate Game Changer</h3>
+      <p>Sweating is the body's natural cooling mechanism. However, when sweat gets trapped in traditional fabrics like cotton, it becomes heavy, cold, and causes friction against the skin. This can lead to chafing, skin irritations, and a rapid drop in body temperature post-workout. High-performance polyester-spandex blends are designed to pull moisture away from the skin, moving it to the outer surface of the fabric where it evaporates quickly. This keeps you dry, cool, and comfortable during intense training sessions.</p>
+      
+      <h3>2. Compression Gear: Support and Recovery</h3>
+      <p>Compression wear has gained immense popularity among powerlifters, runners, and high-intensity interval training (HIIT) enthusiasts. By applying graduated pressure to specific muscle groups, compression garments improve blood circulation, deliver more oxygen to the muscles, and reduce muscle oscillation during high-impact movements. This leads to reduced fatigue during the workout and faster recovery times afterward.</p>
+      
+      <h3>3. Footwear: The Foundation of Every Movement</h3>
+      <p>You wouldn't run a marathon in hiking boots, nor should you do heavy squats in running shoes with soft, air-cushioned soles. Squats, deadlifts, and overhead presses require a stable, flat foundation to maximize power transfer and keep your ankles aligned. Running, on the other hand, requires cushioning to absorb the shock of impact. Choosing the correct footwear for your specific training style is crucial for preventing acute injuries and chronic wear-and-tear on your joints.</p>
+      
+      <h3>4. Versatility and Layering</h3>
+      <p>A good gym wardrobe should adapt to different environments. Layering is key for warming up and cooling down. Starting your session with a lightweight hoodie or long-sleeve zip-up helps raise your core temperature gradually, preparing your muscles and joints for heavy loads. As you warm up, transitioning to a breathable tee or tank ensures you don't overheat.</p>
+    `,
+    category: "Fashion",
+    tags: ["Gym Gear", "Activewear", "Performance"],
+    author: {
+      name: "Alex Johnson",
+      role: "Fitness Stylist & Trainer",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100"
+    },
+    publishedAt: "2026-07-10",
+    readTime: "5 mins",
+    likes: 124,
+    commentsCount: 18,
+    featured: true,
+    thumbnail: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=1200"
+  },
+  {
+    id: "2",
+    title: "How to Build a Sustainable Workout Wardrobe on a Budget",
+    slug: "sustainable-workout-wardrobe-on-budget",
+    summary: "High-quality gym wear doesn't have to cost a fortune. Learn tips on capsule fitness wardrobes, fabric durability, and how renting changes the game.",
+    content: `
+      <h2>Smart Fitness Fashion: Buying Less, Choosing Better</h2>
+      <p>In an era of fast fashion, fitness apparel has become highly disposable. However, cheap workout clothes often lose their shape, elasticity, and color after just a few washes. Building a sustainable, long-lasting workout wardrobe requires a shift in mindset: focusing on quality over quantity, understanding material compositions, and adopting alternative consumption models like rental services.</p>
+      
+      <h3>1. The Capsule Gym Wardrobe Concept</h3>
+      <p>A capsule wardrobe consists of a few high-quality, versatile pieces that can be easily mixed and matched. For a functional fitness capsule, you only need:
+        <ul>
+          <li>3 high-performance tops (neutral colors)</li>
+          <li>2 pairs of premium shorts or leggings</li>
+          <li>1 high-quality sports bra (for women) or compression base-layer</li>
+          <li>1 lightweight zip-up jacket or hoodie</li>
+          <li>1 pair of premium athletic shoes suitable for your primary activity</li>
+        </ul>
+        By investing in premium materials, you ensure these items survive hundreds of washes without degrading in performance.
+      </p>
+      
+      <h3>2. Decoding Fabric Labels</h3>
+      <p>Look for recycled polyester, nylon, and organic cotton. Lycra and elastane are essential for stretch retention. Avoid 100% cotton garments for high-intensity training, as they absorb moisture and lose shape rapidly.</p>
+      
+      <h3>3. The Rise of Athletic Wear Rentals</h3>
+      <p>Why buy expensive performance wear that you might only wear a few times for specific events, outdoor hikes, or photo shoots? Rental platforms like FitFlow allow you to access premium, high-end fitness brands at a fraction of the cost, reducing textile waste and keeping your gym looks fresh and sustainable.</p>
+    `,
+    category: "Sustainability",
+    tags: ["Eco-friendly", "Budgeting", "Capsule Wardrobe"],
+    author: {
+      name: "Emma Watson",
+      role: "Eco-Fashion Advocate",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100"
+    },
+    publishedAt: "2026-07-08",
+    readTime: "4 mins",
+    likes: 85,
+    commentsCount: 9,
+    featured: false,
+    thumbnail: "https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: "3",
+    title: "Understanding Compression Wear: Hype or True Performance Booster?",
+    slug: "understanding-compression-wear-hype-or-reality",
+    summary: "An in-depth, scientifically backed analysis of how compression tights, socks, and shirts affect athletic performance, safety, and recovery.",
+    content: `
+      <h2>The Physics of Compression: How It Works</h2>
+      <p>Go to any local gym or running trail, and you will see athletes wrapped in tight, elastic garments. But is compression wear really the performance booster manufacturers claim, or is it just a slick marketing gimmick? In this article, we dive deep into the physiological mechanisms and scientific studies surrounding compression activewear.</p>
+      
+      <h3>1. Blood Circulation and Oxygenation</h3>
+      <p>Compression garments apply external pressure to the limbs. This pressure mimics the contraction of muscles, assisting the veins in returning deoxygenated blood back to the heart. Improved venous return enhances cardiac output, meaning your muscles receive fresh, oxygen-rich blood more efficiently during prolonged workouts. This is especially beneficial for endurance athletes like runners and cyclists.</p>
+      
+      <h3>2. Reduction of Muscle Oscillation</h3>
+      <p>When your foot hits the ground during a run, or when you land from a box jump, a shockwave travels through your muscle fibers. This is known as muscle oscillation. These micro-vibrations contribute significantly to muscle fatigue and damage. Compression gear wraps tightly around the muscles, keeping them stable and minimizing oscillation, which reduces post-exercise muscle soreness (DOMS).</p>
+      
+      <h3>3. Proprioception: Body Awareness</h3>
+      <p>Proprioception is the body's ability to perceive its position and movement in space. The physical sensation of tight garments stimulating the skin's sensory receptors improves proprioceptive feedback. This enhanced awareness can lead to better form, coordination, and alignment during complex movements like squats or athletic agility drills.</p>
+    `,
+    category: "Science",
+    tags: ["Compression", "Performance", "Science"],
+    author: {
+      name: "Dr. Marcus Vance",
+      role: "Sports Medicine Specialist",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100"
+    },
+    publishedAt: "2026-07-05",
+    readTime: "7 mins",
+    likes: 210,
+    commentsCount: 34,
+    featured: false,
+    thumbnail: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&q=80&w=800"
+  }
+];
+
+const CATEGORIES = ["All", "Fashion", "Sustainability", "Science", "Materials", "Safety"];
+
+export const BlogPage = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const navigate = useNavigate();
+
+  const featuredPost = useMemo(() => {
+    return MOCK_BLOGS.find(blog => blog.featured) || MOCK_BLOGS[0];
+  }, []);
+
+  const filteredBlogs = useMemo(() => {
+    return MOCK_BLOGS.filter(blog => {
+      const matchesSearch = blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === "All" || blog.category === selectedCategory;
+      const matchesTag = !selectedTag || blog.tags.includes(selectedTag);
+
+      return matchesSearch && matchesCategory && matchesTag;
+    });
+  }, [searchTerm, selectedCategory, selectedTag]);
+
+  const allTags = useMemo(() => {
+    const tagsSet = new Set();
+    MOCK_BLOGS.forEach(blog => blog.tags.forEach(tag => tagsSet.add(tag)));
+    return Array.from(tagsSet);
+  }, []);
+
+  return (
+    <div className="blog-page-container">
+      <Header />
+      
+      <main className="blog-main-content">
+        {/* Hero Section */}
+        <section className="blog-hero">
+          <div className="hero-text">
+            <span className="hero-badge">FITFLOW EDITORIAL</span>
+            <h1>The Pulse of Performance</h1>
+            <p>Expert insights, gear guides, scientific analyses, and trend updates from the intersection of athletic performance and sustainable style.</p>
+          </div>
+          <div className="search-bar-wrapper">
+            <Search className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search articles, trends, activewear guides..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </section>
+
+        {/* Featured Post */}
+        {!searchTerm && selectedCategory === "All" && !selectedTag && featuredPost && (
+          <section className="featured-section">
+            <div className="featured-card">
+              <div className="featured-image">
+                <img src={featuredPost.thumbnail} alt={featuredPost.title} />
+              </div>
+              <div className="featured-info">
+                <div className="featured-meta">
+                  <span className="category-tag">{featuredPost.category}</span>
+                  <span className="dot">•</span>
+                  <span className="read-time"><Clock size={14} /> {featuredPost.readTime}</span>
+                </div>
+                <h2><Link to={`/blog/${featuredPost.id}`}>{featuredPost.title}</Link></h2>
+                <p className="featured-summary">{featuredPost.summary}</p>
+                <div className="author-row">
+                  <img src={featuredPost.author.avatar} alt={featuredPost.author.name} className="author-avatar" />
+                  <div>
+                    <span className="author-name">{featuredPost.author.name}</span>
+                    <span className="author-role">{featuredPost.author.role}</span>
+                  </div>
+                </div>
+                <div className="featured-actions">
+                  <Link to={`/blog/${featuredPost.id}`} className="read-more-btn">
+                    Read Full Article <ArrowRight size={16} />
+                  </Link>
+                  <div className="meta-stats">
+                    <span><Heart size={16} /> {featuredPost.likes}</span>
+                    <span><MessageSquare size={16} /> {featuredPost.commentsCount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Filters and Main Grid */}
+        <div className="blog-content-layout">
+          {/* Sidebar */}
+          <aside className="blog-sidebar">
+            <div className="sidebar-widget">
+              <h3>Categories</h3>
+              <ul className="category-list">
+                {CATEGORIES.map(category => (
+                  <li key={category}>
+                    <button
+                      className={selectedCategory === category ? "active" : ""}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setSelectedTag(null);
+                      }}
+                    >
+                      {category}
+                      <ChevronRight size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="sidebar-widget">
+              <h3>Trending Tags</h3>
+              <div className="tags-cloud">
+                {allTags.map(tag => (
+                  <button
+                    key={tag}
+                    className={`tag-btn ${selectedTag === tag ? "active" : ""}`}
+                    onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  >
+                    <Tag size={12} /> {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Articles Grid */}
+          <section className="articles-grid-wrapper">
+            <div className="grid-header">
+              <h2>{selectedCategory} Articles {selectedTag && `tagged "${selectedTag}"`}</h2>
+              <span className="results-count">{filteredBlogs.length} articles found</span>
+            </div>
+
+            {filteredBlogs.length > 0 ? (
+              <div className="articles-grid">
+                {filteredBlogs.map(blog => (
+                  <article key={blog.id} className="blog-grid-card">
+                    <div className="card-image">
+                      <img src={blog.thumbnail} alt={blog.title} />
+                      <span className="card-category">{blog.category}</span>
+                    </div>
+                    <div className="card-body">
+                      <div className="card-meta">
+                        <span><Calendar size={12} /> {new Date(blog.publishedAt).toLocaleDateString()}</span>
+                        <span><Clock size={12} /> {blog.readTime}</span>
+                      </div>
+                      <h3><Link to={`/blog/${blog.id}`}>{blog.title}</Link></h3>
+                      <p>{blog.summary}</p>
+                      
+                      <div className="card-footer">
+                        <div className="author-mini">
+                          <img src={blog.author.avatar} alt={blog.author.name} />
+                          <span>By {blog.author.name.split(" ")[0]}</span>
+                        </div>
+                        <Link to={`/blog/${blog.id}`} className="card-link">
+                          Read <ChevronRight size={14} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="no-results">
+                <BookOpen size={48} />
+                <h3>No Articles Found</h3>
+                <p>We couldn't find any articles matching your search criteria. Try modifying your filters or search keywords.</p>
+                <button onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("All");
+                  setSelectedTag(null);
+                }} className="reset-btn">Reset All Filters</button>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <footer className="blog-footer">
+        <p>&copy; 2026 FitFlow Editorial. Supporting sustainable fitness lifestyles.</p>
+      </footer>
+    </div>
+  );
+};
+
+export const BlogDetailPage = () => {
+  const { id } = useParams();
+  const [blog, setBlog] = useState(null);
+  const [likes, setLikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [comments, setComments] = useState([
+    { id: 1, author: "Sarah Miller", text: "Excellent article! The segment about foot wear and heel elevations during squating completely makes sense. Highly recommend.", time: "1 day ago" },
+    { id: 2, author: "Kevin Durant", text: "Is there any specific recommendation for compression gear manufacturers that use eco-friendly materials?", time: "18 hours ago" }
+  ]);
+  const [newComment, setNewComment] = useState("");
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    const foundBlog = MOCK_BLOGS.find(b => b.id === id) || MOCK_BLOGS[0];
+    setBlog(foundBlog);
+    setLikes(foundBlog ? foundBlog.likes : 0);
+  }, [id]);
+
+  const handleLike = () => {
+    if (hasLiked) {
+      setLikes(prev => prev - 1);
+      setHasLiked(false);
+    } else {
+      setLikes(prev => prev + 1);
+      setHasLiked(true);
+    }
+  };
+
+  const handleAddComment = (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    setComments(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        author: "You (Active User)",
+        text: newComment,
+        time: "Just now"
+      }
+    ]);
+    setNewComment("");
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  if (!blog) {
+    return (
+      <div className="blog-loading">
+        <p>Loading article...</p>
+      </div>
+    );
+  }
+
+  const relatedBlogs = MOCK_BLOGS.filter(b => b.id !== blog.id).slice(0, 2);
+
+  return (
+    <div className="blog-detail-container">
+      <Header />
+      
+      <main className="blog-detail-main">
+        {/* Back Link */}
+        <div className="back-nav">
+          <Link to="/blog" className="back-link">
+            <ArrowLeft size={16} /> Back to Editorial
+          </Link>
+        </div>
+
+        {/* Article Header */}
+        <header className="article-header">
+          <div className="article-meta-tags">
+            <span className="category-label">{blog.category}</span>
+            {blog.tags.map(tag => (
+              <span key={tag} className="tag-label"><Tag size={10} /> {tag}</span>
+            ))}
+          </div>
+          <h1>{blog.title}</h1>
+          <p className="article-summary">{blog.summary}</p>
+
+          <div className="article-author-card">
+            <div className="author-details-wrapper">
+              <img src={blog.author.avatar} alt={blog.author.name} />
+              <div>
+                <span className="author-name">{blog.author.name}</span>
+                <span className="author-meta-text">{blog.author.role}</span>
+              </div>
+            </div>
+            <div className="article-info-stats">
+              <span><Calendar size={14} /> {new Date(blog.publishedAt).toLocaleDateString()}</span>
+              <span className="divider">|</span>
+              <span><Clock size={14} /> {blog.readTime} read</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Featured Image */}
+        <div className="article-banner">
+          <img src={blog.thumbnail} alt={blog.title} />
+        </div>
+
+        {/* Content & Action Bar Layout */}
+        <div className="article-body-layout">
+          {/* Side Share Bar */}
+          <aside className="article-side-actions">
+            <button className={`like-btn ${hasLiked ? "liked" : ""}`} onClick={handleLike}>
+              <Heart size={20} fill={hasLiked ? "var(--color-accent, #ff4d4d)" : "none"} />
+              <span>{likes}</span>
+            </button>
+            <button className="comment-scroll-btn" onClick={() => document.getElementById("comments").scrollIntoView({ behavior: "smooth" })}>
+              <MessageSquare size={20} />
+              <span>{comments.length}</span>
+            </button>
+            <div className="side-divider"></div>
+            <button onClick={handleCopyLink} title="Copy Link">
+              {copiedLink ? <CheckCircle size={20} className="copy-success" /> : <Link2 size={20} />}
+            </button>
+            <button title="Share on Facebook"><Facebook size={20} /></button>
+            <button title="Share on Twitter"><Twitter size={20} /></button>
+          </aside>
+
+          {/* Main Body */}
+          <article className="article-rich-text">
+            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+          </article>
+        </div>
+
+        {/* Comments Section */}
+        <section id="comments" className="comments-section">
+          <h2>Discussion ({comments.length})</h2>
+          
+          <form className="comment-form" onSubmit={handleAddComment}>
+            <textarea
+              placeholder="Join the discussion... Share your thoughts or ask a question."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              rows={3}
+              required
+            ></textarea>
+            <div className="form-actions">
+              <button type="submit" className="post-comment-btn">
+                Post Comment <Send size={14} />
+              </button>
+            </div>
+          </form>
+
+          <div className="comments-list">
+            {comments.map(c => (
+              <div key={c.id} className="comment-card">
+                <div className="comment-header">
+                  <span className="comment-author">{c.author}</span>
+                  <span className="comment-time">{c.time}</span>
+                </div>
+                <p className="comment-text">{c.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Related Articles */}
+        <section className="related-articles-section">
+          <h2>Recommended Readings</h2>
+          <div className="related-grid">
+            {relatedBlogs.map(rb => (
+              <div key={rb.id} className="related-card">
+                <img src={rb.thumbnail} alt={rb.title} />
+                <div className="related-body">
+                  <span>{rb.category}</span>
+                  <h3><Link to={`/blog/${rb.id}`}>{rb.title}</Link></h3>
+                  <Link to={`/blog/${rb.id}`} className="read-link">Read Post &rarr;</Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
