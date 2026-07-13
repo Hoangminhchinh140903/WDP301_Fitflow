@@ -2347,4 +2347,287 @@ export const BlogDetailPage = () => {
   );
 };
 
+const FAQ_ITEMS = [
+  {
+    question: "How does the rental model work on FitFlow?",
+    answer: "Renting is simple! Select your outfit, choose a rental duration (typically 3, 5, or 7 days), select your booking dates via our integrated calendar, and place your order. The outfit will be shipped to you clean and ready-to-wear. Once your rental period ends, put the outfit in the pre-paid return envelope and drop it off at any local postage partner."
+  },
+  {
+    question: "Do I need to clean the garments before returning them?",
+    answer: "No, you don't! We handle professional eco-friendly dry-cleaning and sterilization of all outfits between rentals. In fact, we request that you do NOT attempt to wash or dry-clean the clothes yourself to avoid accidental fiber damage."
+  },
+  {
+    question: "What happens if I accidentally damage or stain an outfit?",
+    answer: "We understand that minor accidents happen. Wear-and-tear such as small, cleanable stains or minor seam separations are covered by our standard rental insurance policy. However, major damage, permanent stains (like ink or bleach), or loss of items will be subject to our Damage Policies, which may incur charges up to the full retail price of the garment."
+  },
+  {
+    question: "How do I choose the correct size?",
+    answer: "Every product page includes a comprehensive Size Guide button containing precise chest, waist, and hip measurements. If you are still unsure, we recommend checking the user reviews which offer real-world fit suggestions, or contacting our online stylist team for custom advice."
+  },
+  {
+    question: "What is the deposit policy?",
+    answer: "Some premium, high-value outfits require a temporary security deposit when checking out. This deposit is fully refunded back to your payment method within 48 hours of our warehouse receiving the returned outfit in good condition."
+  },
+  {
+    question: "Can I extend my rental period?",
+    answer: "Yes, you can request a rental extension through your order history dashboard, subject to availability (i.e. as long as another customer hasn't booked the item for the upcoming dates). Extension fees are charged on a daily rate basis."
+  },
+  {
+    question: "What is your refund and cancellation policy?",
+    answer: "You can cancel any rental booking for a full refund up to 7 days prior to your rental start date. Cancellations made between 3 to 7 days prior will receive a 50% refund or full store credit. Cancellations made less than 72 hours before the start date are non-refundable."
+  }
+];
+
+export const ContactPage = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "General Inquiry",
+    orderNumber: "",
+    message: ""
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    setTimeout(() => {
+      setSubmitted(true);
+      setFormData({
+        name: "",
+        email: "",
+        subject: "General Inquiry",
+        orderNumber: "",
+        message: ""
+      });
+    }, 800);
+  };
+
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
+  return (
+    <div style={{ backgroundColor: "#09090b", color: "#fafafa", minHeight: "100vh", fontFamily: "sans-serif" }}>
+      <Header />
+      
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "6rem 2rem 4rem" }}>
+        {/* Header */}
+        <section style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <h1 style={{ fontSize: "3rem", fontWeight: "800", background: "linear-gradient(135deg, #fff, #a1a1aa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "1rem" }}>Get in Touch</h1>
+          <p style={{ color: "#a1a1aa", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto" }}>
+            Have a question about our sizes, rental models, or your order? Reach out and our support crew will get back to you within 24 hours.
+          </p>
+        </section>
+
+        {/* Contact Info & Form */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.8fr", gap: "4rem", marginBottom: "6rem" }}>
+          
+          {/* Left Column: Info Card */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            <div style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "16px", padding: "2.5rem" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" }}>Support Information</h2>
+              <p style={{ color: "#a1a1aa", fontSize: "0.95rem", lineHeight: "1.6", marginBottom: "2rem" }}>
+                Our customer care department is available Monday through Friday, 9:00 AM to 6:00 PM (GMT+7). 
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <Mail style={{ color: "#3b82f6", marginTop: "0.2rem" }} size={20} />
+                  <div>
+                    <span style={{ display: "block", fontSize: "0.75rem", color: "#a1a1aa", fontWeight: "600" }}>EMAIL US</span>
+                    <a href="mailto:support@fitflow.com" style={{ color: "#fff", textDecoration: "none", fontSize: "0.95rem" }}>support@fitflow.com</a>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <Phone style={{ color: "#3b82f6", marginTop: "0.2rem" }} size={20} />
+                  <div>
+                    <span style={{ display: "block", fontSize: "0.75rem", color: "#a1a1aa", fontWeight: "600" }}>CALL US</span>
+                    <a href="tel:+84123456789" style={{ color: "#fff", textDecoration: "none", fontSize: "0.95rem" }}>+84 (123) 456-789</a>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <MapPin style={{ color: "#3b82f6", marginTop: "0.2rem" }} size={20} />
+                  <div>
+                    <span style={{ display: "block", fontSize: "0.75rem", color: "#a1a1aa", fontWeight: "600" }}>HEADQUARTERS</span>
+                    <span style={{ color: "#fff", fontSize: "0.95rem", lineHeight: "1.4" }}>
+                      123 High-Tech District,<br />FPT University Campus, Hanoi, Vietnam
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "16px", padding: "2rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+              <ShieldCheck size={32} style={{ color: "#10b981" }} />
+              <div>
+                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "700" }}>Data Privacy Guaranteed</h4>
+                <p style={{ margin: "0.2rem 0 0 0", fontSize: "0.8rem", color: "#a1a1aa" }}>We secure all submitted inquiries and do not share details.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Interactive Form */}
+          <div style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "16px", padding: "3rem" }}>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: "700", marginBottom: "1.5rem" }}>Send a Message</h2>
+            
+            {submitted ? (
+              <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
+                <div style={{ display: "inline-flex", padding: "1rem", backgroundColor: "rgba(16, 185, 129, 0.1)", borderRadius: "50%", color: "#10b981", marginBottom: "1.5rem" }}>
+                  <CheckCircle size={36} />
+                </div>
+                <h3 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "0.5rem" }}>Inquiry Submitted!</h3>
+                <p style={{ color: "#a1a1aa", fontSize: "0.95rem", marginBottom: "2rem" }}>
+                  Thank you for contacting FitFlow. A ticket has been created and we will notify you by email shortly.
+                </p>
+                <button 
+                  onClick={() => setSubmitted(false)}
+                  style={{ backgroundColor: "#27272a", border: "1px solid #3f3f46", color: "#fff", padding: "0.6rem 1.25rem", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}
+                >
+                  Send Another Message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#a1a1aa", marginBottom: "0.5rem", fontWeight: "600" }}>Full Name</label>
+                    <input 
+                      type="text" 
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g. John Doe"
+                      style={{ width: "100%", backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "0.75rem", color: "#fff", fontSize: "0.9rem" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#a1a1aa", marginBottom: "0.5rem", fontWeight: "600" }}>Email Address</label>
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g. john@example.com"
+                      style={{ width: "100%", backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "0.75rem", color: "#fff", fontSize: "0.9rem" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#a1a1aa", marginBottom: "0.5rem", fontWeight: "600" }}>Subject Topic</label>
+                    <select 
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      style={{ width: "100%", backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "0.75rem", color: "#fff", fontSize: "0.9rem", cursor: "pointer" }}
+                    >
+                      <option value="General Inquiry">General Inquiry</option>
+                      <option value="Rental Order Support">Rental Order Support</option>
+                      <option value="Size Consultation">Size Consultation</option>
+                      <option value="Feedback / Suggestion">Feedback / Suggestion</option>
+                      <option value="Partnership / Wholesale">Partnership / Wholesale</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#a1a1aa", marginBottom: "0.5rem", fontWeight: "600" }}>Order Number (Optional)</label>
+                    <input 
+                      type="text" 
+                      name="orderNumber"
+                      value={formData.orderNumber}
+                      onChange={handleInputChange}
+                      placeholder="e.g. #FF-98213"
+                      style={{ width: "100%", backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "0.75rem", color: "#fff", fontSize: "0.9rem" }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#a1a1aa", marginBottom: "0.5rem", fontWeight: "600" }}>Detailed Message</label>
+                  <textarea 
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
+                    rows={5}
+                    placeholder="Tell us details about your questions or comments..."
+                    style={{ width: "100%", backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "0.75rem", color: "#fff", fontSize: "0.9rem", resize: "vertical" }}
+                  ></textarea>
+                </div>
+
+                <button 
+                  type="submit" 
+                  style={{
+                    backgroundColor: "#3b82f6", border: "none", color: "#fff", 
+                    padding: "0.85rem", borderRadius: "8px", fontWeight: "600", 
+                    cursor: "pointer", display: "flex", alignItems: "center", 
+                    justifyContent: "center", gap: "0.5rem", fontSize: "0.95rem"
+                  }}
+                >
+                  Send Inquiry <Send size={16} />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* FAQs Accordion */}
+        <section style={{ borderTop: "1px solid #27272a", paddingTop: "5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+            <h2 style={{ fontSize: "2rem", fontWeight: "800", color: "#fff" }}>Frequently Asked Questions</h2>
+            <p style={{ color: "#a1a1aa", fontSize: "0.95rem", marginTop: "0.25rem" }}>Find instant answers to the questions we receive most frequently.</p>
+          </div>
+
+          <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {FAQ_ITEMS.map((faq, index) => {
+              const isOpen = openFaqIndex === index;
+              return (
+                <div 
+                  key={index}
+                  style={{ 
+                    backgroundColor: "#18181b", border: "1px solid #27272a", 
+                    borderRadius: "12px", overflow: "hidden", transition: "0.3s" 
+                  }}
+                >
+                  <button
+                    onClick={() => toggleFaq(index)}
+                    style={{
+                      width: "100%", padding: "1.5rem", display: "flex", 
+                      justifyContent: "space-between", alignItems: "center", 
+                      background: "none", border: "none", color: "#fff", 
+                      fontWeight: "600", textAlign: "left", cursor: "pointer", 
+                      fontSize: "1rem"
+                    }}
+                  >
+                    <span>{faq.question}</span>
+                    {isOpen ? <ChevronUp size={18} style={{ color: "#3b82f6" }} /> : <ChevronDown size={18} style={{ color: "#a1a1aa" }} />}
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding: "0 1.5rem 1.5rem 1.5rem", color: "#a1a1aa", fontSize: "0.925rem", lineHeight: "1.6" }}>
+                      {faq.answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
+
 export default Homepage;
