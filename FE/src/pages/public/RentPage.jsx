@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { 
+  SlidersHorizontal, X, FileText, Plus, Search, Edit2, Trash2, Eye, 
+  ThumbsUp, MessageSquare, Check, Filter, BarChart2, Users, AlertCircle, 
+  RefreshCw, LayoutGrid, List, Clock
+} from 'lucide-react';
 import Header from '../../components/common/Header';
 import FilterSidebar from '../../components/catalog/common/FilterSidebar';
 import ProductGrid from '../../components/catalog/common/ProductGrid';
@@ -558,3 +562,46 @@ export default function RentPage() {
     </div>
   );
 }
+
+const INITIAL_OWNER_BLOGS = [
+  { id: "1", title: "10 Essential Gym Outfits for Maximum Performance", author: "Alex Johnson", category: "Fashion", status: "Published", publishedAt: "2026-07-10", views: 1245, likes: 124, comments: 18, readTime: "5 mins" },
+  { id: "2", title: "How to Build a Sustainable Workout Wardrobe", author: "Emma Watson", category: "Sustainability", status: "Published", publishedAt: "2026-07-08", views: 890, likes: 85, comments: 9, readTime: "4 mins" }
+];
+
+export const OwnerBlogsScreen = () => {
+  const [blogs, setBlogs] = useState(INITIAL_OWNER_BLOGS);
+  const [activeTab, setActiveTab] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const filteredBlogs = blogs.filter(b => {
+    const matchesTab = activeTab === "All" || b.status === activeTab;
+    const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase()) || b.author.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
+
+  return (
+    <div style={{ padding: "2rem", color: "#e4e4e7", backgroundColor: "#09090b", minHeight: "100vh" }}>
+      <h1>Blog Management Dashboard</h1>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+        <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ padding: "0.5rem", backgroundColor: "#18181b", border: "1px solid #27272a", color: "#fff" }} />
+        <button onClick={() => setActiveTab("All")} style={{ padding: "0.5rem 1rem", backgroundColor: activeTab === "All" ? "#3b82f6" : "#27272a", color: "#fff", border: "none" }}>All</button>
+        <button onClick={() => setActiveTab("Published")} style={{ padding: "0.5rem 1rem", backgroundColor: activeTab === "Published" ? "#3b82f6" : "#27272a", color: "#fff", border: "none" }}>Published</button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {filteredBlogs.map(blog => (
+          <div key={blog.id} style={{ backgroundColor: "#18181b", padding: "1.5rem", border: "1px solid #27272a", borderRadius: "8px", display: "flex", justifyContent: "space-between" }}>
+            <div>
+              <h3>{blog.title}</h3>
+              <p>Author: {blog.author} | Category: {blog.category}</p>
+            </div>
+            <div>
+              <span>Status: <strong>{blog.status}</strong></span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+

@@ -3,9 +3,9 @@ import HomePage from "../pages/public/HomePage";
 import BuyPage from "../pages/public/BuyPage";
 import CollectionPage from "../pages/public/CollectionPage";
 import CollectionEntryPage from "../pages/public/CollectionEntryPage";
-import BlogPage from "../pages/public/BlogPage";
-import BlogDetailPage from "../pages/public/BlogDetailPage";
-import ContactPage from "../pages/public/ContactPage";
+import { BlogPage, BlogDetailPage, ContactPage } from "../pages/public/HomePage";
+import { OwnerBlogsScreen } from "../pages/public/RentPage";
+import { TrackOrderPage, OrderHistoryPage, OrderDetailPage } from "../pages/public/BuyPage";
 import FavoritesPage from "../pages/customer/FavoritesPage";
 import MyVouchersPage from "../pages/customer/MyVouchersPage";
 import ProductDetailPage from "../pages/customer/ProductDetailPage";
@@ -34,16 +34,12 @@ import OwnerUsersScreen from "../pages/owner/OwnerUsersScreen";
 import InventoryDashboardPage from "../pages/owner/InventoryDashboardPage";
 import InventoryProductDetailPage from "../pages/owner/InventoryProductDetailPage";
 import OwnerReviewsScreen from "../pages/owner/OwnerReviewsScreen";
-import OwnerBlogsScreen from "../pages/owner/OwnerBlogsScreen";
 // Rental pages
 import RentalCheckoutPage from "../pages/RentalCheckoutPage";
 import RentalDetailPage from "../pages/RentalDetailPage";
 import BuyCheckoutPage from "../pages/BuyCheckoutPage";
 import CartPage from "../pages/CartPage";
-import OrderHistoryPage from "../pages/OrderHistoryPage";
-import OrderDetailPage from "../pages/OrderDetailPage";
 import PaymentResultPage from "../pages/PaymentResultPage";
-import TrackOrderPage from "../pages/TrackOrderPage";
 
 const AppRoutes = () => {
   return (
